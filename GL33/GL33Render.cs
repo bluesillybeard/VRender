@@ -517,7 +517,7 @@ namespace VRender.GL33{
             RenderImage.ColorFromRGBA(out byte r, out byte g, out byte b, out byte a, _settings.BackgroundColor);
             GL.ClearColor(r/256f, g/256f, b/256f, a/256f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            Array.Fill<uint>(_directTexture.pixels, 0x000000FF);
+            Array.Fill<uint>(_directTexture.pixels, 0x00000000);
         }
         private void OnResize(ResizeEventArgs args){
             GL.Viewport(0, 0, args.Width, args.Height);
