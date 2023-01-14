@@ -1,4 +1,4 @@
-namespace Render;
+namespace VRender;
 
 using OpenTK.Windowing.GraphicsLibraryFramework;
 public interface IEntityBehavior{

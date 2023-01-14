@@ -1,7 +1,7 @@
 using vmodel;
 
 using System;
-namespace Render{
+namespace VRender{
     public interface IRenderMesh: IRenderObject{
         int ElementCount();
         int VertexCount();

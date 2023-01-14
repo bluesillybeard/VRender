@@ -1,4 +1,4 @@
-namespace Render{
+namespace VRender{
     /**
     <summary>
     Represents an object that is contained within a Render.

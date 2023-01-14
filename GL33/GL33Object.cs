@@ -1,4 +1,4 @@
-namespace Render.GL33{
+namespace VRender.GL33{
     class GL33Object: IRenderObject{
         public ERenderType Type(){
             return ERenderType.GL33;

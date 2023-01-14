@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using vmodel;
 
 
-namespace Render.GL33{
+namespace VRender.GL33{
 
     struct GL33MeshHandle{
 

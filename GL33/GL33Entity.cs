@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace Render.GL33{
+namespace VRender.GL33{
     class GL33Entity: GL33Object, IRenderEntity{
         public GL33Entity(EntityPosition pos, GL33Mesh mesh, GL33Texture texture, GL33Shader shader, int id, bool depthTest, IEntityBehavior? behavior){
             _position = pos;

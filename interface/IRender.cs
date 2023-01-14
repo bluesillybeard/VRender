@@ -8,7 +8,7 @@ using OpenTK.Windowing.Common;
 using StbImageSharp;
 
 using vmodel;
-namespace Render{
+namespace VRender{
     public interface IRender{
         #pragma warning disable //disable the null warning, since the CurrentRender will NEVER be null in any valid runtime.
         public static IRender CurrentRender;

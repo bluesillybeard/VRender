@@ -1,7 +1,7 @@
 using OpenTK.Mathematics;
 
 
-namespace Render{
+namespace VRender{
     public struct RenderSettings{
         //default
         public RenderSettings()

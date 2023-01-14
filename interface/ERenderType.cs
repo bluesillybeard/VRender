@@ -1,4 +1,4 @@
-namespace Render{
+namespace VRender{
     public enum ERenderType{
         GL33,
         //todo: implement more rendering backends

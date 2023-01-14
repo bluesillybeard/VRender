@@ -1,4 +1,4 @@
-namespace Render{
+namespace VRender{
     public struct RenderEntityModel{
         public IRenderMesh mesh;
         public IRenderTexture texture;

@@ -1,6 +1,6 @@
-namespace Render.GL33;
+namespace VRender.GL33;
 
-using Render.Util;
+using VRender.Util;
 using vmodel;
 class GL33TextEntity : GL33Entity, IRenderTextEntity{
     public string Text{

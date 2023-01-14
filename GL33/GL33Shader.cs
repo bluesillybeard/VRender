@@ -6,7 +6,7 @@ using OpenTK.Mathematics;
 
 //NOTICE: this is a modified version of the shader class from the official OpenTK examples.
 
-namespace Render.GL33{
+namespace VRender.GL33{
     class GL33Shader: GL33Object, IRenderShader, IDisposable{
         private readonly Dictionary<string, int> _uniformLocations;
         public readonly string _name;

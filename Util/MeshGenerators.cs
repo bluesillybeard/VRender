@@ -1,4 +1,4 @@
-namespace Render.Util;
+namespace VRender.Util;
 
 using vmodel;
 

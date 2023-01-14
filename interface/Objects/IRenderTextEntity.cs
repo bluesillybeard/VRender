@@ -1,4 +1,4 @@
-namespace Render;
+namespace VRender;
 
 public interface IRenderTextEntity : IRenderEntity{
     string Text{get;set;}

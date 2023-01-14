@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using vmodel;
 using OpenTK.Mathematics;
 
-using Render.GL33;
+using VRender.GL33;
 
-namespace Render
+namespace VRender
 {
     public static class RenderUtils{
         public const double UpdateTime = 1.0/30.0;

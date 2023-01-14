@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace Render{
+namespace VRender{
     public interface IRenderEntity{
         EntityPosition Position{get; set;}
         Vector3 Location{get; set;}

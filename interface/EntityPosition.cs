@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using OpenTK.Mathematics;
 
-namespace Render{
+namespace VRender{
     public struct EntityPosition{
         public static EntityPosition Zero = new EntityPosition(Vector3.Zero, Vector3.Zero, Vector3.One);
 

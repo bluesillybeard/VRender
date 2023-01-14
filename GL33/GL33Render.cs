@@ -12,7 +12,7 @@ using StbImageSharp;
 
 using vmodel;
 
-namespace Render.GL33{
+namespace VRender.GL33{
     class GL33Render : IRender{
 
         public GL33Render(RenderSettings settings)

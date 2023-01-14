@@ -8,7 +8,7 @@ using System.IO;
 using StbImageSharp;
 //NOTICE: this is a modified version of the texture class from the official OpenTK examples.
 
-namespace Render.GL33{
+namespace VRender.GL33{
 
     //This is used to clean up leaked textures from the GPU.
     struct GL33TextureHandle{
