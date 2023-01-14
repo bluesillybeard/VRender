@@ -38,7 +38,7 @@ namespace VRender{
         RenderSettings Settings{get;}
 
         //in pixels
-        Vector2 WindowSize();
+        Vector2i WindowSize();
 
         uint EntityCount();
 

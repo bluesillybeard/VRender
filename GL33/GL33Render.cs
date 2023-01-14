@@ -124,7 +124,7 @@ class GL33Render : IRender{
         }
     }
 
-    public Vector2 WindowSize(){
+    public Vector2i WindowSize(){
         return _window.Size;
     }
 
