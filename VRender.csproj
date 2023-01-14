@@ -13,6 +13,6 @@
 
   <ItemGroup>
     <PackageReference Include="OpenTK" Version="4.4.0" /><!--OpenTK since this project uses OpenTK to expose OpenGL functions and provide a windowing system-->
-    <PackageReference Include="stbimagesharp" Version="2.27.13" /> <!--to open images-->
+    <!--<PackageReference Include="stbimagesharp" Version="2.27.13" /> <!-to open images-->
   </ItemGroup>
 </Project>
