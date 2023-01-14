@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+  <!--Sorry my dependencies are a bit messy.-->
+  <!-- I should publish them properly at some point.-->
+    <ProjectReference Include="../VModel/VModel.csproj" /><!-- custom library to load custom model format-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTK" Version="4.4.0" /><!--OpenTK since this project uses OpenTK to expose OpenGL functions and provide a windowing system-->
+    <PackageReference Include="stbimagesharp" Version="2.27.13" /> <!--to open images-->
+  </ItemGroup>
+</Project>
