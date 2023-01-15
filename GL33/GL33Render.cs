@@ -131,13 +131,16 @@ class GL33Render : IRender{
         {
             if(entity is not null)
             {
-                this.DeleteEntity(entity);
                 entity._mesh.Dispose();
                 entity._shader.Dispose();
                 entity._texture.Dispose();
             }
         }
         _window.Close();
+        #nullable disable
+        IRender.CurrentRender = null;
+        #nullable restore
+        IRender.CurrentRenderType = 0;
     }
 
     public Vector2i WindowSize(){
@@ -395,65 +398,69 @@ class GL33Render : IRender{
         get => _cursorLocked;
         set{
             _cursorLocked = value;
-            _window.CursorVisible = !_cursorLocked;
-            _window.CursorGrabbed = _cursorLocked;
+            //_window.CursorVisible = !_cursorLocked;
+            //_window.CursorGrabbed = _cursorLocked;
+            _window.CursorState = _cursorLocked ? CursorState.Grabbed: CursorState.Normal;
         }
     }
     private void Update(long timeTicks, long deltaTicks){
-        _window.ProcessEvents();
-        //clear out deletion buffers
+        try{
+            _window.ProcessInputEvents();
+            NativeWindow.ProcessWindowEvents(false);
+            //clear out deletion buffers
 
-        //meshes
-        lock(_deletedMeshes){
-            if(_deletedMeshes.Count > 0){
-                RenderUtils.PrintWarnLn($"Clearing {_deletedMeshes.Count} leaked meshes - somebody (probably me) forgot to delete their meshes!");
-                foreach(GL33MeshHandle mesh in _deletedMeshes){
-                    GL33Mesh.Dispose(mesh);
+            //meshes
+            lock(_deletedMeshes){
+                if(_deletedMeshes.Count > 0){
+                    RenderUtils.PrintWarnLn($"Clearing {_deletedMeshes.Count} leaked meshes - somebody (probably me) forgot to delete their meshes!");
+                    foreach(GL33MeshHandle mesh in _deletedMeshes){
+                        GL33Mesh.Dispose(mesh);
+                    }
+                _deletedMeshes.Clear();
                 }
-            _deletedMeshes.Clear();
             }
-        }
 
-        //textures
-        lock(_deletedTextures){
-            if(_deletedTextures.Count > 0){
-                RenderUtils.PrintWarnLn($"Clearing {_deletedTextures.Count} leaked textures - somebody (probably me) forgot to delete their textures!");
-                foreach(GL33TextureHandle mesh in _deletedTextures){
-                    GL33Texture.Dispose(mesh);
+            //textures
+            lock(_deletedTextures){
+                if(_deletedTextures.Count > 0){
+                    RenderUtils.PrintWarnLn($"Clearing {_deletedTextures.Count} leaked textures - somebody (probably me) forgot to delete their textures!");
+                    foreach(GL33TextureHandle mesh in _deletedTextures){
+                        GL33Texture.Dispose(mesh);
+                    }
+                _deletedTextures.Clear();
                 }
-            _deletedTextures.Clear();
             }
-        }
-        //I don't bother with shaders (yet) since they are usually small, and very few of them ever exist.
-        //If it becomes an issue, then i'll add the deletion buffer for that.
+            //I don't bother with shaders (yet) since they are usually small, and very few of them ever exist.
+            //If it becomes an issue, then i'll add the deletion buffer for that.
 
 
-        foreach(GL33Entity? entity in _entities){
-            //update previous matrix values
-            if(entity == null) continue;
-            entity.lastTransform = entity.GetTransform();
-        }
+            foreach(GL33Entity? entity in _entities){
+                //update previous matrix values
+                if(entity == null) continue;
+                entity.lastTransform = entity.GetTransform();
+            }
 
-        if(_camera != null) _camera.lastTransform = _camera.GetTransform();
+            if(_camera != null) _camera.lastTransform = _camera.GetTransform();
 
-        //update events
-        if(OnUpdate != null)OnUpdate.Invoke(deltaTicks/10_000_000.0);
-        //update entity behaviors
-        KeyboardState keyboard = Keyboard();
-        MouseState mouse = Mouse();
-        foreach(GL33Entity? entity in _entities){
-            if(entity is null)continue;
-            if(entity.Behavior is null)continue;
-            entity.Behavior.Update(timeTicks/10_000_000.0, deltaTicks/10_000_000.0, entity, keyboard, mouse);
-        }
+            //update events
+            if(OnUpdate != null)OnUpdate.Invoke(deltaTicks/10_000_000.0);
+            //update entity behaviors
+            KeyboardState keyboard = Keyboard();
+            MouseState mouse = Mouse();
+            foreach(GL33Entity? entity in _entities){
+                if(entity is null)continue;
+                if(entity.Behavior is null)continue;
+                entity.Behavior.Update(timeTicks/10_000_000.0, deltaTicks/10_000_000.0, entity, keyboard, mouse);
+            }
 
-        //process delayed entities
-        while(_delayedEntities.Count > 0){
-            _AddEntity(_delayedEntities.Pop());
-        }
-        while(_delayedEntityRemovals.Count > 0){
-            DeleteEntity(_delayedEntityRemovals.Pop());
-        }
+            //process delayed entities
+            while(_delayedEntities.Count > 0){
+                _AddEntity(_delayedEntities.Pop());
+            }
+            while(_delayedEntityRemovals.Count > 0){
+                DeleteEntity(_delayedEntityRemovals.Pop());
+            }
+        }catch(Exception e){RenderUtils.PrintErrLn(e);};
     }
     private void Render(long lastRender, long now)
     {
