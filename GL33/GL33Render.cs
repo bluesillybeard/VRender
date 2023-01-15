@@ -122,6 +122,22 @@ class GL33Render : IRender{
                 System.Threading.Thread.Sleep(1); //sleep for 1 ms. This stops us from stealing all of the CPU time.
             }
         }
+        Exit();
+    }
+
+    private void Exit()
+    {
+        foreach(var entity in _entities)
+        {
+            if(entity is not null)
+            {
+                this.DeleteEntity(entity);
+                entity._mesh.Dispose();
+                entity._shader.Dispose();
+                entity._texture.Dispose();
+            }
+        }
+        _window.Close();
     }
 
     public Vector2i WindowSize(){
