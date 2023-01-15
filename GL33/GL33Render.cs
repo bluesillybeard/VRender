@@ -27,6 +27,7 @@ class GL33Render : IRender{
             _entities = new List<GL33Entity?>();
             _freeEntitySlots = new List<int>();
             _directTexture = new RenderImage((uint)settings.Size.X, (uint)settings.Size.Y);
+            _gpuObjects = new LinkedList<WeakReference<GL33Object>>();
 
 
             _window = new NativeWindow(
@@ -46,8 +47,11 @@ class GL33Render : IRender{
             _window.MakeCurrent();
             EAttribute[] directAttributes = new EAttribute[]{EAttribute.vec2};
             _directShader = new GL33Shader(dvsc, dfsc, true);
+            _gpuObjects.AddLast(new WeakReference<GL33Object>(_directShader));
             _directMesh = new GL33Mesh(directAttributes, new float[]{1f, 1f, 1f, -1f, -1f, 1f, -1f, -1f}, new uint[]{0, 1, 2, 1, 2, 3});
+            _gpuObjects.AddLast(new WeakReference<GL33Object>(_directMesh));
             _directTextureGPU = new GL33Texture(_directTexture);
+            _gpuObjects.AddLast(new WeakReference<GL33Object>(_directTextureGPU));
             SpawnEntity(EntityPosition.Zero, _directShader, _directMesh, _directTextureGPU, false, null);
             //the NativeWindow class has no way to do this, so we directly ask GLFW for it
             if(!settings.VSync){
@@ -129,14 +133,23 @@ class GL33Render : IRender{
     {
         foreach(var entity in _entities)
         {
-            if(entity is not null)
+            if(entity is GL33TextEntity)
             {
+                //Text meshes are not tracked, so we delete them here
                 entity._mesh.Dispose();
-                entity._shader.Dispose();
-                entity._texture.Dispose();
+            }
+        }
+        foreach(var objectRef in _gpuObjects)
+        {
+            if(objectRef.TryGetTarget(out var glObject))
+            {
+                if(glObject is GL33Mesh glMesh) glMesh.Dispose();
+                else if(glObject is GL33Texture glTexture) glTexture.Dispose();
+                else if(glObject is GL33Shader glShader) glShader.Dispose();
             }
         }
         _window.Close();
+        _window.Dispose();
         #nullable disable
         IRender.CurrentRender = null;
         #nullable restore
@@ -159,27 +172,39 @@ class GL33Render : IRender{
     public IRenderMesh? LoadMesh(string path, out Exception? err){
         VMesh? mesh = VModelUtils.LoadMesh(path, out err);
         if(mesh == null)return null;
-        return new GL33Mesh(mesh.Value);
+        var glMesh = new GL33Mesh(mesh.Value);
+       _gpuObjects.AddLast(new WeakReference<GL33Object>(glMesh));
+        return glMesh;
     }
 
     public IRenderMesh? LoadMesh(string path, bool dynamic, out Exception? err){
         VMesh? mesh = VModelUtils.LoadMesh(path, out err);
         if(mesh == null)return null;
-        return new GL33Mesh(mesh.Value, dynamic);
+        var glMesh = new GL33Mesh(mesh.Value, dynamic);
+       _gpuObjects.AddLast(new WeakReference<GL33Object>(glMesh));
+        return glMesh;
     }
 
     public IRenderMesh LoadMesh(VMesh mesh){
-        return new GL33Mesh(mesh);
+        var glMesh = new GL33Mesh(mesh);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glMesh));
+        return glMesh;
     }
     public IRenderMesh LoadMesh(VMesh mesh, bool dynamic){
-        return new GL33Mesh(mesh, dynamic);
+        var glMesh = new GL33Mesh(mesh, dynamic);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glMesh));
+        return glMesh;
     }
     public IRenderMesh LoadMesh(float[] vertices, uint[] indices, EAttribute[] attributes){
-        return new GL33Mesh(attributes, vertices, indices);
+        var glMesh = new GL33Mesh(attributes, vertices, indices);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glMesh));
+        return glMesh;
     }
 
     public IRenderMesh LoadMesh(float[] vertices, uint[] indices, EAttribute[] attributes, bool dynamic){
-        return new GL33Mesh(attributes, vertices, indices, dynamic);
+        var glMesh = new GL33Mesh(attributes, vertices, indices, dynamic);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glMesh));
+        return glMesh;
     }
 
     public void DeleteMesh(IRenderMesh mesh){
@@ -190,7 +215,9 @@ class GL33Render : IRender{
     public IRenderTexture? LoadTexture(string path, out Exception? error){
         try{
             error = null;
-            return new GL33Texture(path);
+            var glTexture = new GL33Texture(path);
+            _gpuObjects.AddLast(new WeakReference<GL33Object>(glTexture));
+            return glTexture;
         } catch (Exception e){
             error = e;
             return null;
@@ -198,10 +225,14 @@ class GL33Render : IRender{
     }
 
     public IRenderTexture LoadTexture(ImageResult image){
-        return new GL33Texture(image);
+        var glTexture = new GL33Texture(image);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glTexture));
+        return glTexture;
     }
     public IRenderTexture LoadTexture(float r, float g, float b, float a){
-        return new GL33Texture(r, g, b, a);
+        var glTexture = new GL33Texture(r, g, b, a);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glTexture));
+        return glTexture;
     }
 
     public IRenderTexture LoadTexture(IntPtr pixels, int width, int height, int channels){
@@ -215,7 +246,9 @@ class GL33Render : IRender{
         image.Height = height;
         image.Width = width;
         image.SourceComp = image.Comp;
-        return new GL33Texture(image);
+        var glTexture = new GL33Texture(image);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(glTexture));
+        return glTexture;
     }
 
     public void DeleteTexture(IRenderTexture texture){
@@ -226,7 +259,9 @@ class GL33Render : IRender{
     public IRenderShader? LoadShader(string shader, out Exception? err){
         try{
             err = null;
-            return new GL33Shader(shader + "vertex.glsl", shader + "fragment.glsl");
+            var glShader = new GL33Shader(shader + "vertex.glsl", shader + "fragment.glsl");
+            _gpuObjects.AddLast(new WeakReference<GL33Object>(glShader));
+            return  glShader;
         }catch(Exception e){
             err = e;
             return null;
@@ -244,7 +279,9 @@ class GL33Render : IRender{
         if(model == null)return null;
         //send it to the GPU
         GL33Mesh mesh = new GL33Mesh(model.Value.mesh);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(mesh));
         GL33Texture texture = new GL33Texture(model.Value.texture);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(texture));
 
         if(err != null){
             RenderUtils.PrintErrLn(string.Join("/n", err));
@@ -255,8 +292,10 @@ class GL33Render : IRender{
     public RenderEntityModel LoadModel(VModel model){
         //send it to the GPU
         GL33Mesh mesh = new GL33Mesh(model.mesh);
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(mesh));
         GL33Texture texture = new GL33Texture(model.texture);
-        return new RenderEntityModel(mesh, texture);         
+        _gpuObjects.AddLast(new WeakReference<GL33Object>(texture));
+        return new RenderEntityModel(mesh, texture);
     }
 
     public void DeleteModel(RenderEntityModel model){
@@ -531,6 +570,9 @@ class GL33Render : IRender{
         _directTexture = new RenderImage((uint)args.Width, (uint)args.Height);
     }
 
+    //every GPU memory allocation.
+    // They are weak references so they can be cleared later.
+    private LinkedList<WeakReference<GL33Object>> _gpuObjects;
     public List<GL33TextureHandle> _deletedTextures;
 
     public List<GL33MeshHandle> _deletedMeshes;
