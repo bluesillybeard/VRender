@@ -65,7 +65,7 @@ namespace VRender{
         /**
         <summary>
         loads a texture into the GPU.
-        Supports png, jpg, jpeg, qoi, vqoi
+        Supports png, jpg, jpeg
         </summary>
         */
         IRenderTexture? LoadTexture(string filePath, out Exception? error);
