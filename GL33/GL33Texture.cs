@@ -28,11 +28,15 @@ namespace VRender.GL33{
         }
 
         public GL33Texture(ImageResult image){
+            //As far as I can tell, I can only do glSubImage when the pixel format is the same as it was.
+            // And thus I cannot use it for ImageResult since ImageResult can have a different pixel format.
+            this.Dispose();
+            _deleted = false;
             LoadTexture(image);
         }
 
         public GL33Texture(RenderImage image){
-            LoadTexture(image);
+            ReloadTexture(image);
         }
 
         public void Reload(string path)
@@ -42,10 +46,14 @@ namespace VRender.GL33{
         }
 
         public void Reload(ImageResult image){
+            this.Dispose();
+            this._deleted = false;
             LoadTexture(image);
         }
 
         public void Reload(RenderImage image){
+            this.Dispose();
+            this._deleted = false;
             LoadTexture(image);
         }
         public GL33Texture(float r, float g, float b, float a)
@@ -54,11 +62,25 @@ namespace VRender.GL33{
             image.WritePixel(0, 0, RenderImage.RGBAFromColor((byte)(r*256),(byte)(g*256),(byte)(b*256),(byte)(a*256)));
             LoadTexture(image);
         }
+        private void ReloadTexture(RenderImage img)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, _id);
+
+            GL.TexSubImage2D(TextureTarget.Texture2D,
+                0, 0, 0,
+                (int)img.width,
+                (int)img.height,
+                PixelFormat.Rgba,
+                //haha endianess go BRRRRRRR
+                PixelType.UnsignedInt8888,
+                img.pixels);
+
+            SetParametersAndGenerateMipmaps();
+        }
         private void LoadTexture(ImageResult img){
-            // Generate handle
             _id = GL.GenTexture();
 
-            // Bind the handle
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, _id);
 

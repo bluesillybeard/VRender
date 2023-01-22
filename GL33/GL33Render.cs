@@ -1,3 +1,5 @@
+//#define DebugPrinting
+
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -13,6 +15,7 @@ using StbImageSharp;
 using vmodel;
 
 namespace VRender.GL33;
+
 class GL33Render : IRender{
 
     public GL33Render(RenderSettings settings)
@@ -442,7 +445,21 @@ class GL33Render : IRender{
             _window.CursorState = _cursorLocked ? CursorState.Grabbed: CursorState.Normal;
         }
     }
+    #if DebugPrinting
+    private long lastDebugPrint = 0;
+    #endif
     private void Update(long timeTicks, long deltaTicks){
+        //print debug stuff
+        #if DebugPrinting
+        if(lastDebugPrint < timeTicks+10_000_000){
+            lastDebugPrint = timeTicks;
+            RenderUtils.Print($@"
+            GPU Object allocations: {_gpuObjects.Count}\n
+            Entities: {_entities.Count}\n
+            DirectEntities: {_directEntities.Count}\n
+            ");
+        }
+        #endif
         try{
             _window.ProcessInputEvents();
             NativeWindow.ProcessWindowEvents(false);
