@@ -156,12 +156,12 @@ namespace VRender.GL33{
 
             int totalAttrib = 0;
             foreach(EAttribute attrib in attributes){
-                totalAttrib += (int)attrib;
+                totalAttrib += (int)attrib % 5;
             }
 
             int runningTotalAttrib = 0;
             for(int i=0; i<attributes.Length; i++){
-                EAttribute attrib = attributes[i];
+                EAttribute attrib = (EAttribute)((int)attributes[i] % 5);
                 GL.EnableVertexAttribArray(i);
                 GL.VertexAttribPointer(i, (int)attrib, VertexAttribPointerType.Float, false, totalAttrib*sizeof(float), runningTotalAttrib*sizeof(float));
                 runningTotalAttrib += (int)attrib;
