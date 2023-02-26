@@ -28,9 +28,7 @@ public enum RenderType
 */
 public interface IRender : IDisposable
 {
-    #pragma warning disable //CurrentRender should never be null. ever.
-    public static readonly IRender CurrentRender;
-    #pragma warning restore
+    public static IRender CurrentRender => VRenderLib.Render;
 
 
     //Texture loading functions
