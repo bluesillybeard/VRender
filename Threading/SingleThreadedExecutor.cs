@@ -14,6 +14,8 @@ public sealed class SingleThreadedExecutor
     {
         tasks = new ConcurrentQueue<ExecutorTask>();
         running = false;
+        executorWaits = new AutoResetEvent(false);
+        outsiderWaits = new ManualResetEvent(true);
     }
 
     //The thread that will execute the tasks should call this method.
@@ -23,27 +25,29 @@ public sealed class SingleThreadedExecutor
         running = true;
         while(running)
         {
-            if(tasks.TryDequeue(out var task))
+            var hadTask = tasks.TryDequeue(out var task);
+            if(hadTask && task is not null)
             {
-                try{
-                    task.Execute();
-                    //System.Console.WriteLine("Executed a task");
-                } catch (Exception e)
-                {
-                    System.Console.Error.WriteLine(e.Message);
-                }
+                task.Execute();
             }
-            Thread.Sleep(0);
-            
+            if(!hadTask)
+            {
+                outsiderWaits.Set();
+                executorWaits.WaitOne(100);
+            }
         }
-    }
+}
 
     public void Stop()
     {
         running = false;
+        outsiderWaits.Dispose();
+        executorWaits.Dispose();
     }
     private ConcurrentQueue<ExecutorTask> tasks;
     volatile private bool running;
+    private EventWaitHandle executorWaits;
+    private EventWaitHandle outsiderWaits;
 
     public IEnumerable<ExecutorTask> GetScheduledTasks()
     {
@@ -53,6 +57,8 @@ public sealed class SingleThreadedExecutor
     {
         var t = new ExecutorTask(task);
         this.tasks.Enqueue(t);
+        executorWaits.Set();
+        outsiderWaits.Reset();
         return t;
     }
 
@@ -60,14 +66,18 @@ public sealed class SingleThreadedExecutor
     {
         var t = new ExecutorTask<TResult>(task);
         this.tasks.Enqueue(t);
+        //Tell the main thread that there is a new task to do.
+        executorWaits.Set();
+        outsiderWaits.Reset();
         return t;
     }
 
     public void WaitUntilQueueEmpty()
     {
-        while(!tasks.IsEmpty)
-        {
-            Thread.Sleep(0);
-        }
+        outsiderWaits.WaitOne();
+        //while(!tasks.IsEmpty)
+        //{
+        //    Thread.Sleep(0);
+        //}
     }
 }

@@ -341,12 +341,18 @@ public class GL33Render : IRender
             {
                 mainThread.WaitUntilQueueEmpty();
                 if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime);
+                lastFrameTime = loopTime;
             }
             if(loopTime - lastUpdateTime > targetUpdateDelta)
             {
                 Update(loopTime - lastUpdateTime);
+                lastUpdateTime = loopTime;
             }
-            Thread.Sleep(0);
+            var waitTime = targetFrameDelta - (DateTime.Now - loopTime);
+            if(waitTime > TimeSpan.Zero)
+            {
+                Thread.Sleep(waitTime);
+            }
         }
         Dispose();
     }
