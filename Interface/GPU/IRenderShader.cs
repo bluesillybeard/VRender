@@ -3,12 +3,7 @@ namespace VRender.Interface;
 using vmodel;
 public interface IRenderShader : IDisposable
 {
-    /**
-    <summary>
-        Returns a span containing the attributes that this shader expects for its mesh input.
-    </summary>
-    */
-    ReadOnlySpan<EAttribute> GetAttributes();
+    Attributes GetAttributes();
 
     /**
     <summary>

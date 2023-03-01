@@ -143,9 +143,9 @@ public class GL33Shader : IRenderShader
         this.features.attributes = features.attributes;
         this.features = features;
     }
-    public ReadOnlySpan<EAttribute> GetAttributes()
+    public Attributes GetAttributes()
     {
-        return features.attributes.AsSpan();
+        return features.attributes;
     }
     public bool IsDisposed()
     {
@@ -269,7 +269,7 @@ public class GL33Shader : IRenderShader
         disposed = true;
     }
 
-    public ShaderFeatures GetFeatures()
+    public ShaderFeatures? GetFeatures()
     {
         return features;
     }
