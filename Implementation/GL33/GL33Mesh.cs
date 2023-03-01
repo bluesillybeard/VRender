@@ -11,7 +11,7 @@ class GL33Mesh : IRenderMesh
 {
     public ReadOnlySpan<EAttribute> GetAttributes()
     {
-        return attributes.AsSpan();
+        return attributes.Attr;
     }
     public VMesh GetData()
     {
@@ -56,14 +56,14 @@ class GL33Mesh : IRenderMesh
     private int vertexArrayObject;
     private uint indexCount;
     private uint vertexFloatCount;
-    private EAttribute[] attributes;
+    private Attributes attributes;
     public GL33Mesh(VMesh mesh, bool dynamic)
     {
         this.attributes = mesh.attributes;
         LoadMesh(mesh.vertices, mesh.indices, dynamic);
     }
 
-    public GL33Mesh(EAttribute[] attributes, float[] vertices, uint[] indices, bool dynamic)
+    public GL33Mesh(Attributes attributes, float[] vertices, uint[] indices, bool dynamic)
     {
         this.attributes = attributes;
         LoadMesh(vertices, indices, dynamic);

@@ -18,12 +18,13 @@ public interface IRenderShader : IDisposable
     */
     bool IsDisposed();
 
-    ShaderFeatures GetFeatures();
+    ShaderFeatures? GetFeatures();
 }
 
+//A simple shader features, for simple shaders.
 public struct ShaderFeatures
 {
-    public ShaderFeatures(EAttribute[] attributes, bool applyModelTransform, bool applyCameraTransform)
+    public ShaderFeatures(Attributes attributes, bool applyModelTransform, bool applyCameraTransform)
     {
         this.attributes = attributes;
         this.applyCameraTransform = applyCameraTransform;
@@ -36,8 +37,8 @@ public struct ShaderFeatures
         they must have a proper purpose.
     </summary>
     */
-    public EAttribute[] attributes;
+    public Attributes attributes;
     public bool applyModelTransform;
     public bool applyCameraTransform;
-    //TODO: bool applyNormalBackfaceCulling;
 }
+
