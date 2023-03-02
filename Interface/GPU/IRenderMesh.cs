@@ -9,7 +9,7 @@ public interface IRenderMesh : IDisposable
         Returns a span containing the attributes for this texture.
     </summary>
     */
-    ReadOnlySpan<EAttribute> GetAttributes();
+    Attributes GetAttributes();
     /**
     <summary>
         Downloads the mesh data from the GPU and then returns it.

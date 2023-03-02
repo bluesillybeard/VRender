@@ -19,7 +19,18 @@ public class GL33Shader : IRenderShader
         string fragmentCode = GenerateFragmentCode(features);
         //load the shader
         LoadShader(vertexCode, fragmentCode, out program, out uniforms);
+    }
 
+    /**
+    <summary>
+        Relies on the GL context
+    </summary>
+    */
+    public GL33Shader(string fragmentCode, string vertexCode, Attributes attributes)
+    {
+        LoadShader(vertexCode, fragmentCode, out program, out uniforms);
+        this.features = null;
+        this.attributes = attributes;
     }
 
     //TODO: these code generators are incomplete, as they don't have RGB or RGBA color support.
@@ -132,20 +143,9 @@ public class GL33Shader : IRenderShader
 
         return vertexShader.ToString();
     }
-    /**
-    <summary>
-        Relies on the GL context
-    </summary>
-    */
-    public GL33Shader(string fragmentCode, string vertexCode, ShaderFeatures features)
-    {
-        LoadShader(vertexCode, fragmentCode, out program, out uniforms);
-        this.features.attributes = features.attributes;
-        this.features = features;
-    }
     public Attributes GetAttributes()
     {
-        return features.attributes;
+        return attributes;
     }
     public bool IsDisposed()
     {
@@ -276,7 +276,8 @@ public class GL33Shader : IRenderShader
 
     private int program;
     private bool disposed;
-    private ShaderFeatures features;
+    private ShaderFeatures? features;
+    private Attributes attributes;
     private Dictionary<string, int> uniforms;
     
     private static void LoadShader(string vertexSource, string fragmentSource, out int program, out Dictionary<string, int> uniforms)

@@ -9,9 +9,9 @@ using OpenTK.Graphics.OpenGL;
 //TODO: refactor all of this to use the command queue
 class GL33Mesh : IRenderMesh
 {
-    public ReadOnlySpan<EAttribute> GetAttributes()
+    public Attributes GetAttributes()
     {
-        return attributes.Attr;
+        return attributes;
     }
     public VMesh GetData()
     {

@@ -44,8 +44,8 @@ public class GL33Render : IRender
         };
         window = new NativeWindow(windowSettings);
         mainThread = new SingleThreadedExecutor();
-        shaders = new Dictionary<ShaderFeatures, GL33Shader>();
-        
+        featuredShaders = new Dictionary<ShaderFeatures, GL33Shader>();
+        customShaders = new Dictionary<(string, string, Attributes), GL33Shader>();
         window.Resize += OnResize;
     }
      //Texture loading functions
@@ -163,27 +163,56 @@ public class GL33Render : IRender
 
     public IRenderShader GetShader(ShaderFeatures features)
     {
-        //Return any shader that already exists
-        if(shaders.TryGetValue(features, out var shader))
-        {
-            //Make sure the shader hasn't been deleted
-            if(!shader.IsDisposed())
-                return shader;
-        }
-        
         var task = GetShaderAsync(features);
         task.WaitUntilDone();
         var result = task.GetResult();
         if(result is null) throw new Exception("Bro this shader don't work" + features);
         return result;
-
     }
 
+    public IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
+    {
+        var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes);
+        task.WaitUntilDone();
+        var result = task.GetResult();
+        if(result is null) throw new Exception("Bro this shader don't work:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes);
+        return result;
+    }
     public ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features)
     {
+        //Return any shader that already exists
+        if(featuredShaders.TryGetValue(features, out var shader))
+        {
+            //Make sure the shader hasn't been deleted
+            if(!shader.IsDisposed())
+            {
+                //Since they want a task, we return a task that is already done
+                var t = new ExecutorTask<IRenderShader>(null, true);
+                return t;
+            }
+        }
         return SubmitToQueue(() => {
             var shader = new GL33Shader(features);
-            shaders.Add(features, shader);
+            featuredShaders.Add(features, shader);
+            return (IRenderShader) shader;
+        });
+    }
+
+    public ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
+    {
+        if(customShaders.TryGetValue((GLSLVertexCode, GLSLFragmentCode, attributes), out var shader))
+        {
+            //Make sure the shader hasn't been deleted
+            if(!shader.IsDisposed())
+            {
+                //Since they want a task, we return a task that is already done
+                var t = new ExecutorTask<IRenderShader>(null, true);
+                return t;
+            }
+        }
+        return SubmitToQueue(() => {
+            var shader = new GL33Shader(GLSLFragmentCode, GLSLVertexCode, attributes);
+            customShaders.Add((GLSLVertexCode, GLSLFragmentCode, attributes), shader);
             return (IRenderShader) shader;
         });
     }
@@ -413,7 +442,8 @@ public class GL33Render : IRender
 
     private NativeWindow window;
 
-    private Dictionary<ShaderFeatures, GL33Shader> shaders;
+    private Dictionary<ShaderFeatures, GL33Shader> featuredShaders;
+    private Dictionary<(string, string, Attributes), GL33Shader> customShaders;
 
     private Thread? gameThread;
 

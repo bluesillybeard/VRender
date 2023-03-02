@@ -71,7 +71,13 @@ public interface IRender : IDisposable
     </summary>
     */
     IRenderShader GetShader(ShaderFeatures features);
-
+    /**
+    <summary>
+        Returns a shader given a set of required functionality.
+        It reuses shaders when possible.
+    </summary>
+    */
+    IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes);
     /**
     <summary>
         Returns a shader given a set of required functionality.
@@ -79,6 +85,14 @@ public interface IRender : IDisposable
     </summary>
     */
     ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features);
+
+    /**
+    <summary>
+        Returns a shader given a set of required functionality.
+        It reuses shaders when possible.
+    </summary>
+    */
+    ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes);
 
     RenderModel LoadModel(VModel model);
     RenderModel? LoadModel(string vmfPath, out List<VError>? errors);
