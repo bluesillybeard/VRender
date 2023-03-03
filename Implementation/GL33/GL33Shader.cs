@@ -234,6 +234,23 @@ public class GL33Shader : IRenderShader
         }
     }
 
+    /// <summary>
+    /// Set a uniform Vector3 on this shader.
+    /// Relies on the GL context.
+    /// </summary>
+    /// <param name="name">The name of the uniform</param>
+    /// <param name="data">The data to set</param>
+    public void SetVector4(string name, Vector4 data, out string? error)
+    {
+        if(uniforms.TryGetValue(name, out int uniformID)){
+            GL.UseProgram(program);
+            GL.Uniform4(uniformID, data);
+            error = null;
+        } else {
+            error = $"ERROR: shader uniform \"{name}\" doesn't exist in {this.program}";
+        }
+    }
+
     public void SetUniform(string name, object data, out string? error)
     {
         if(data is int integer)
@@ -246,12 +263,15 @@ public class GL33Shader : IRenderShader
         } else if(data is Matrix4 matrix)
         {
             SetMatrix4(name, matrix, out error);
-        } else if(data is Vector3 vector)
+        } else if(data is Vector3 vector3)
         {
-            SetVector3(name, vector, out error);
+            SetVector3(name, vector3, out error);
+        }else if(data is Vector4 vector4)
+        {
+            SetVector4(name, vector4, out error);
         } else 
         {
-            error = "Data is not one of the supported types";
+            error = name + " is not one of the supported types";
         }
 
     }

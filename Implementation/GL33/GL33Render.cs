@@ -166,7 +166,7 @@ public class GL33Render : IRender
         var task = GetShaderAsync(features);
         task.WaitUntilDone();
         var result = task.GetResult();
-        if(result is null) throw new Exception("Bro this shader don't work" + features);
+        if(result is null) throw new Exception("Error creating shader from shader features", task.GetException());
         return result;
     }
 
@@ -175,7 +175,7 @@ public class GL33Render : IRender
         var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes);
         task.WaitUntilDone();
         var result = task.GetResult();
-        if(result is null) throw new Exception("Bro this shader don't work:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes);
+        if(result is null) throw new Exception("Error compiling shader:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes, task.GetException());
         return result;
     }
     public ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features)

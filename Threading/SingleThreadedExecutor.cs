@@ -75,9 +75,5 @@ public sealed class SingleThreadedExecutor
     public void WaitUntilQueueEmpty()
     {
         outsiderWaits.WaitOne();
-        //while(!tasks.IsEmpty)
-        //{
-        //    Thread.Sleep(0);
-        //}
     }
 }
