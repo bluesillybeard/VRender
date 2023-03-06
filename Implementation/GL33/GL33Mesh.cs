@@ -33,6 +33,14 @@ class GL33Mesh : IRenderMesh
 
     public void Dispose()
     {
+        if(Environment.CurrentManagedThreadId != 1)
+        {
+            //Needs to be on main thread
+            IRender.CurrentRender.SubmitToQueue( () => {
+                Dispose();
+            });
+            return;
+        }
         disposed = true;
         GL.DeleteBuffer(vertexBufferObject);
         GL.DeleteBuffer(indexBufferObject);
@@ -70,7 +78,6 @@ class GL33Mesh : IRenderMesh
     }
     private void LoadMesh(float[] vertices, uint[] indices, bool dynamic)
     {
-        System.Console.WriteLine("Loading mesh on thread " + Environment.CurrentManagedThreadId);
         indexCount = (uint)indices.Length;
         vertexFloatCount = (uint)vertices.Length;
         vertexArrayObject = GL.GenVertexArray();
