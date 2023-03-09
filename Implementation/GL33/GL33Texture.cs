@@ -146,4 +146,9 @@ public class GL33Texture : IRenderTexture
     }
 
     private int textureId;
+
+    public override int GetHashCode()
+    {
+        return textureId;
+    }
 }

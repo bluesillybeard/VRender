@@ -378,4 +378,9 @@ public class GL33Shader : IRenderShader
             throw new Exception($"ERROR: unable to link Program({program}).\n\n{infoLog}");
         }
     }
+
+    public override int GetHashCode()
+    {
+        return program;
+    }
 }

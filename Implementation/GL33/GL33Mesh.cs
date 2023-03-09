@@ -106,6 +106,10 @@ class GL33Mesh : IRenderMesh
             runningTotalAttrib += attrib;
         }
     }
+    public override int GetHashCode()
+    {
+        return vertexArrayObject;
+    }
 }
 
 //TODO: memory leak avoidance.
