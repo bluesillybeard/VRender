@@ -7,7 +7,7 @@ public static class MeshGenerators{
     public static readonly Attributes defaultTextAttributes = new Attributes(new EAttribute[]{EAttribute.position, EAttribute.textureCoords});
     public const int defaultTextPosAttrib = 0;
     public const int defaultTextTexAttrib = 1;
-    private const int cacheLimit = 100;
+    private const int cacheLimit = 1000;
     //Creates a text mesh using the default attributes - see 'defaultTextAttributes'
     //text is the text to convert
     //centerx and centery tell weather or not to center in certain directions
@@ -70,14 +70,14 @@ public static class MeshGenerators{
         for(int i=0; i<attributes.Length; i++)
         {
             EAttribute attribute = attributes[i];
-            totalAttrib += (int)attribute;
+            totalAttrib += (int)attribute % 5;
             if(i < posAttrib)
             {
-                posAttribOffset += (int)attribute;
+                posAttribOffset += (int)attribute % 5;
             }
             if(i < texAttrib)
             {
-                texAttribOffset += (int)attribute;
+                texAttribOffset += (int)attribute % 5;
             }
         }
         if(totalAttrib < 4)
