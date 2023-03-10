@@ -94,7 +94,7 @@ public static class MeshGenerators{
         mapping[texAttribOffset  ] = 2;
         mapping[texAttribOffset+1] = 3;
 
-        MeshBuilder builder = new MeshBuilder(numCharacters*4*totalAttrib, numCharacters*6);
+        MeshBuilder builder = new MeshBuilder(attributes, numCharacters*4*totalAttrib, numCharacters*6);
         float YStart = centerY ? -lines.Count/2f : 0; //the farthest up coordinate of the text.
         for(int i=0; i < lines.Count; i++)
         {
@@ -124,7 +124,7 @@ public static class MeshGenerators{
             }
         }
         error = null;
-        VMesh mesh = builder.ToMesh(attributes);
+        VMesh mesh = builder.ToMesh();
         // We need to add this mesh to the cache
         // First, add the item to the cache and cache limit
         // We can reuse the hash from earlier

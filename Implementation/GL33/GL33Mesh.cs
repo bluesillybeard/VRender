@@ -93,10 +93,7 @@ class GL33Mesh : IRenderMesh
         if(dynamic)GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.DynamicDraw);
         else GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-        int totalAttrib = 0;
-        foreach(EAttribute attrib in attributes){
-            totalAttrib += (int)attrib % 5;
-        }
+        int totalAttrib = (int)attributes.TotalAttributes();
 
         int runningTotalAttrib = 0;
         for(int i=0; i<attributes.Length; i++){
