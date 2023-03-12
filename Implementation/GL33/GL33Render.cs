@@ -206,7 +206,7 @@ public class GL33Render : IRender
             if(!shader.IsDisposed())
             {
                 //Since they want a task, we return a task that is already done
-                var t = new ExecutorTask<IRenderShader>(null, true);
+                var t = new ExecutorTask<IRenderShader>(shader);
                 return t;
             }
         }

@@ -15,10 +15,12 @@ public class GL33Shader : IRenderShader
     public GL33Shader(ShaderFeatures features)
     {
         //generate vertex shader
-        string vertexCode = GenerateVertexCode(features);
-        string fragmentCode = GenerateFragmentCode(features);
+        string vertexCode = GenerateGLSLVertexCode(features);
+        string fragmentCode = GenerateGLSLFragmentCode(features);
         //load the shader
         LoadShader(vertexCode, fragmentCode, out program, out uniforms);
+        this.features = features;
+        this.attributes = features.attributes;
     }
 
     /**
@@ -34,7 +36,7 @@ public class GL33Shader : IRenderShader
     }
 
     //TODO: these code generators are incomplete, as they don't have RGB or RGBA color support.
-    public static string GenerateFragmentCode(ShaderFeatures features)
+    public static string GenerateGLSLFragmentCode(ShaderFeatures features)
     {
         StringBuilder code = new StringBuilder();
         code.Append("#version 330 core\n");
@@ -64,7 +66,7 @@ public class GL33Shader : IRenderShader
         return code.ToString();
     }
 
-    public static string GenerateVertexCode(ShaderFeatures features)
+    public static string GenerateGLSLVertexCode(ShaderFeatures features)
     {
         StringBuilder vertexShader = new StringBuilder();
         vertexShader.Append("#version 330 core\n");
