@@ -23,7 +23,7 @@ public struct ShaderFeatures
     {
         this.attributes = attributes;
         this.applyCameraTransform = applyCameraTransform;
-        this.applyModelTransform = applyCameraTransform;
+        this.applyModelTransform = applyModelTransform;
     }
     /**
     <summary>
