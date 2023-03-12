@@ -12,7 +12,6 @@ public class ExecutorTask
         this.task = task;
         this.completed = completed;
     }
-
     /**
     <summary>
         Runs the task on the thread calling this function,
@@ -71,6 +70,7 @@ public class ExecutorTask
 
 public sealed class ExecutorTask<TResult> : ExecutorTask
 {
+
     public ExecutorTask(Func<TResult>? resultTask)
     : base(null) //C# drives me nuts sometimes, there has to be a better way to do this
     {
@@ -90,7 +90,16 @@ public sealed class ExecutorTask<TResult> : ExecutorTask
         }
         base.task = () => {RunTask(resultTask, out result);};
     }
-
+    /**
+    <summary>
+        For creating a task that is already finished
+    </summary>
+    */
+    public ExecutorTask(TResult? result)
+    : base(null, true)
+    {
+        this.result = result;
+    }
     public TResult? GetResult()
     {
         return result;
