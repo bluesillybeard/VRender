@@ -377,11 +377,7 @@ public class GL33Render : IRender
                 Update(loopTime - lastUpdateTime);
                 lastUpdateTime = loopTime;
             }
-            var waitTime = targetFrameDelta - (DateTime.Now - loopTime);
-            if(waitTime > TimeSpan.Zero)
-            {
-                Thread.Sleep(waitTime);
-            }
+            Thread.Sleep(0);
         }
         Dispose();
     }
