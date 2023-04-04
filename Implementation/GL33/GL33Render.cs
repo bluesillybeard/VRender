@@ -395,6 +395,7 @@ public class GL33Render : IRender
     public Action<TimeSpan>? OnUpdate {get;set;}
     public Action<TimeSpan>? OnDraw {get;set;}
     public Action? OnStart {get;set;}
+    public Action? OnCleanup {get;set;}
     
     //TODO: IO events
     public Action<KeyboardKeyEventArgs>? OnKeyDown {get; set;}
@@ -411,6 +412,7 @@ public class GL33Render : IRender
 
     public void Dispose()
     {
+        if(OnCleanup is not null)OnCleanup();
         var destroyWindowTask = SubmitToQueue(() => {
             window.Dispose();
         });

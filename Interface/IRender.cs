@@ -179,6 +179,8 @@ public interface IRender : IDisposable
     */
     Action? OnStart {get;set;}
 
+    Action? OnCleanup{get;set;}
+
     Action<KeyboardKeyEventArgs>? OnKeyDown {get; set;}
     Action<KeyboardKeyEventArgs>? OnKeyUp {get; set;}
     Action<MouseButtonEventArgs>? OnMouseDown {get; set;}
