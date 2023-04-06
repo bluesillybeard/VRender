@@ -2,15 +2,17 @@ namespace VRender.Threading;
 
 public class ExecutorTask
 {
-    public ExecutorTask(Action? task)
+    public ExecutorTask(Action? task, string name)
     {
         this.task = task;
+        this.name = name;
     }
 
-    public ExecutorTask(Action? task, bool completed)
+    public ExecutorTask(Action? task, bool completed, string name)
     {
         this.task = task;
         this.completed = completed;
+        this.name = name;
     }
     /**
     <summary>
@@ -66,13 +68,16 @@ public class ExecutorTask
     private bool running;
     //Any exception that was thrown by the task
     private Exception? exception;
+    //This is to make debugging eaiser; all task require a name so I can more easily track them.
+    // TODO: Remove this or make it debug-only, since once I am done debugging with it it's useless.
+    public string name;
 }
 
 public sealed class ExecutorTask<TResult> : ExecutorTask
 {
 
-    public ExecutorTask(Func<TResult>? resultTask)
-    : base(null) //C# drives me nuts sometimes, there has to be a better way to do this
+    public ExecutorTask(Func<TResult>? resultTask, string name)
+    : base(null, name) //C# drives me nuts sometimes, there has to be a better way to do this
     {
         if(resultTask is null){
             base.task = null;
@@ -81,8 +86,8 @@ public sealed class ExecutorTask<TResult> : ExecutorTask
         base.task = () => {RunTask(resultTask, out result);};
     }
 
-    public ExecutorTask(Func<TResult>? resultTask, bool completed)
-    : base(null, completed) //C# drives me nuts sometimes, there has to be a better way to do this
+    public ExecutorTask(Func<TResult>? resultTask, bool completed, string name)
+    : base(null, completed, name) //C# drives me nuts sometimes, there has to be a better way to do this
     {
         if(resultTask is null){
             base.task = null;
@@ -95,8 +100,8 @@ public sealed class ExecutorTask<TResult> : ExecutorTask
         For creating a task that is already finished
     </summary>
     */
-    public ExecutorTask(TResult? result)
-    : base(null, true)
+    public ExecutorTask(TResult? result, string name)
+    : base(null, true, name)
     {
         this.result = result;
     }

@@ -28,9 +28,6 @@ using Threading;
 
 public class GL33Render : IRender
 {
-    private const int DisposePriority = 10;
-    private const int DefaultPriority = 0;
-    private const int RenderPriority = -10;
     //Must be run from main thread.
     public GL33Render(RenderSettings settings)
     {
@@ -51,14 +48,28 @@ public class GL33Render : IRender
         customShaders = new Dictionary<(string, string, Attributes), GL33Shader>();
         window.Resize += OnResize;
     }
-     //Texture loading functions
+    //Texture loading functions
+    
     public IRenderTexture LoadTexture(ImageResult image)
     {
         return LoadTexture(image, false);
     }
+    public IRenderTexture LoadTexture(ImageResult image, int priority)
+    {
+        return LoadTexture(image, false, priority);
+    }
     public IRenderTexture LoadTexture(ImageResult image, bool dynamic)
     {
-        var task = LoadTextureAsync(image, dynamic);
+        return LoadTexture(image, dynamic, IRender.DefaultPriority);
+    }
+    public IRenderTexture LoadTexture(ImageResult image, bool dynamic, int priority)
+    {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            //We are on the main thread, so we do this synchronously
+            return (IRenderTexture)new GL33Texture(image);
+        }
+        var task = LoadTextureAsync(image, dynamic, priority);
         task.WaitUntilDone();
         #nullable disable
         return task.GetResult();
@@ -68,9 +79,24 @@ public class GL33Render : IRender
     {
         return LoadTexture(path, false, out error);
     }
+    public IRenderTexture? LoadTexture(string path, out Exception? error, int priority)
+    {
+        return LoadTexture(path, false, out error, priority); 
+    }
     public IRenderTexture? LoadTexture(string path, bool dynamic, out Exception? error)
     {
-        var task = LoadTextureAsync(path, dynamic);
+        return LoadTexture(path, dynamic, out error, IRender.DefaultPriority);
+    }
+    public IRenderTexture? LoadTexture(string path, bool dynamic, out Exception? error, int priority)
+    {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            //We are on the main thread, so we do this synchronously
+            var syncResult = LoadTextureRaw(path, dynamic);
+            error = syncResult.error;
+            return syncResult.Item1;
+        }
+        var task = LoadTextureAsync(path, dynamic, priority);
         task.WaitUntilDone();
         var result = task.GetResult();
         error = result.error;
@@ -82,23 +108,38 @@ public class GL33Render : IRender
     {
         return LoadTextureAsync(image, false);
     }
-    //C# Tuple FTW
+    public ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image, int priority)
+    {
+        return LoadTextureAsync(image, false, priority);
+    }
     public ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image, bool dynamic)
+    {
+        return LoadTextureAsync(image, dynamic, IRender.DefaultPriority);
+    }
+    public ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image, bool dynamic, int priority)
     {
         return SubmitToQueue(() => {
             //I need to cast it here since C# doesn't like it when I cast objects with generics.
             return (IRenderTexture)new GL33Texture(image);
-        }, 0);
+        }, priority, "LoadTexture");
     }
     public ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path)
     {
         return LoadTextureAsync(path, false);
     }
+    public ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, int priority)
+    {
+        return LoadTextureAsync(path, false, priority);
+    }
     public ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, bool dynamic)
+    {
+        return LoadTextureAsync(path, dynamic, IRender.DefaultPriority);
+    }
+    public ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, bool dynamic, int priority)
     {
         return SubmitToQueue( () => {
             return LoadTextureRaw(path, dynamic);
-        }, 0);
+        }, priority, "LoadTexture\"" + path + "\"");
     }
 
     private (IRenderTexture?, Exception? error) LoadTextureRaw(string path, bool dynamic)
@@ -117,9 +158,17 @@ public class GL33Render : IRender
     {
         return LoadMesh(mesh, false);
     }
+    public IRenderMesh LoadMesh(VMesh mesh, int priority)
+    {
+        return LoadMesh(mesh, false, priority);
+    }
     public IRenderMesh LoadMesh(VMesh mesh, bool dynamic)
     {
-        var task = LoadMeshAsync(mesh, dynamic);
+        return LoadMesh(mesh, dynamic, IRender.DefaultPriority);
+    }
+    public IRenderMesh LoadMesh(VMesh mesh, bool dynamic, int priority)
+    {
+        var task = LoadMeshAsync(mesh, dynamic, priority);
         task.WaitUntilDone();
         #nullable disable
         return task.GetResult();
@@ -129,9 +178,18 @@ public class GL33Render : IRender
     {
         return LoadMesh(vmeshPath, out error, false);
     }
+    public IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, int priority)
+    {
+        return LoadMesh(vmeshPath, out error, false, priority);
+    
+    }
     public IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, bool dynamic)
     {
-        var task = LoadMeshAsync(vmeshPath, dynamic);
+        return LoadMesh(vmeshPath, out error, dynamic, IRender.DefaultPriority);
+    }
+    public IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, bool dynamic, int priority)
+    {
+        var task = LoadMeshAsync(vmeshPath, dynamic, priority);
         task.WaitUntilDone();
         var result = task.GetResult();
         error = result.error;
@@ -143,17 +201,33 @@ public class GL33Render : IRender
     {
         return LoadMeshAsync(mesh, false);
     }
+    public ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, int priority)
+    {
+        return LoadMeshAsync(mesh, false, priority);
+    }
     public ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, bool dynamic)
+    {
+        return LoadMeshAsync(mesh, dynamic, IRender.DefaultPriority);
+    }
+    public ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, bool dynamic, int priority)
     {
         return SubmitToQueue( ()=> {
             return (IRenderMesh) new GL33Mesh(mesh, dynamic);
-        }, 0);
+        }, priority, "LoadMesh");
     }
     public ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath)
     {
         return LoadMeshAsync(vmeshPath, false);
     }
+    public ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, int priority)
+    {
+        return LoadMeshAsync(vmeshPath, false, priority);
+    }
     public ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, bool dynamic)
+    {
+        return LoadMeshAsync(vmeshPath, dynamic, IRender.DefaultPriority);
+    }
+    public ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, bool dynamic, int priority)
     {
         return SubmitToQueue<(IRenderMesh?, Exception? error)>( ()=>{
             VMesh? mesh = VModelUtils.LoadMesh(vmeshPath, out var error);
@@ -161,27 +235,38 @@ public class GL33Render : IRender
                 return (null, error);
             }
             return ((IRenderMesh) new GL33Mesh(mesh.Value, dynamic), null);
-        }, 0);
+        }, priority, "LoadMesh\"" + vmeshPath + "\"");
     }
-
     public IRenderShader GetShader(ShaderFeatures features)
     {
-        var task = GetShaderAsync(features);
+        return GetShader(features, IRender.DefaultPriority);
+    }
+
+    public IRenderShader GetShader(ShaderFeatures features, int priority)
+    {
+        var task = GetShaderAsync(features, priority);
         task.WaitUntilDone();
         var result = task.GetResult();
         if(result is null) throw new Exception("Error creating shader from shader features", task.GetException());
         return result;
     }
-
     public IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
     {
-        var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes);
+        return GetShader(GLSLVertexCode, GLSLFragmentCode, attributes, IRender.DefaultPriority);
+    }
+    public IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes, int priority)
+    {
+        var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes, priority);
         task.WaitUntilDone();
         var result = task.GetResult();
         if(result is null) throw new Exception("Error compiling shader:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes, task.GetException());
         return result;
     }
     public ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features)
+    {
+        return GetShaderAsync(features, IRender.DefaultPriority);
+    }
+    public ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features, int priority)
     {
         //Return any shader that already exists
         if(featuredShaders.TryGetValue(features, out var shader))
@@ -190,7 +275,7 @@ public class GL33Render : IRender
             if(!shader.IsDisposed())
             {
                 //Since they want a task, we return a task that is already done
-                var t = new ExecutorTask<IRenderShader>(shader);
+                var t = new ExecutorTask<IRenderShader>(shader, "");
                 return t;
             }
         }
@@ -198,10 +283,13 @@ public class GL33Render : IRender
             var shader = new GL33Shader(features);
             featuredShaders.Add(features, shader);
             return (IRenderShader) shader;
-        }, 0);
+        }, priority, "CustomShader");
     }
-
     public ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
+    {
+        return GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes, IRender.DefaultPriority);
+    }
+    public ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes, int priority)
     {
         if(customShaders.TryGetValue((GLSLVertexCode, GLSLFragmentCode, attributes), out var shader))
         {
@@ -209,7 +297,7 @@ public class GL33Render : IRender
             if(!shader.IsDisposed())
             {
                 //Since they want a task, we return a task that is already done
-                var t = new ExecutorTask<IRenderShader>(shader);
+                var t = new ExecutorTask<IRenderShader>(shader, "");
                 return t;
             }
         }
@@ -217,29 +305,40 @@ public class GL33Render : IRender
             var shader = new GL33Shader(GLSLFragmentCode, GLSLVertexCode, attributes);
             customShaders.Add((GLSLVertexCode, GLSLFragmentCode, attributes), shader);
             return (IRenderShader) shader;
-        }, 0);
+        }, priority, "CustomShaderGLSL");
     }
-
     public RenderModel LoadModel(VModel model)
     {
-        var task = LoadModelAsync(model);
+        return LoadModel(model, IRender.DefaultPriority);
+    }
+    public RenderModel LoadModel(VModel model, int priority)
+    {
+        var task = LoadModelAsync(model, priority);
         task.WaitUntilDone();
         return task.GetResult();
     }
     public RenderModel? LoadModel(string vmfPath, out List<VError>? errors)
     {
-        var task = LoadModelAsync(vmfPath);
+        return LoadModel(vmfPath, out errors, IRender.DefaultPriority);
+    }
+    public RenderModel? LoadModel(string vmfPath, out List<VError>? errors, int priority)
+    {
+        var task = LoadModelAsync(vmfPath, priority);
         task.WaitUntilDone();
         var res = task.GetResult();
         errors = res.errors;
         return res.Item1;
     }
-
     public ExecutorTask<RenderModel> LoadModelAsync(VModel model)
+    {
+        return LoadModelAsync(model, IRender.DefaultPriority);
+    }
+
+    public ExecutorTask<RenderModel> LoadModelAsync(VModel model, int priority)
     {
         return SubmitToQueue(()=>{
             return LoadModelRaw(model, false);
-        }, 0);
+        }, priority, "LoadModel");
     }
 
     private RenderModel LoadModelRaw(VModel model, bool dynamic)
@@ -250,6 +349,10 @@ public class GL33Render : IRender
     }
     public ExecutorTask<(RenderModel?, List<VError>? errors)> LoadModelAsync(string vmfPath)
     {
+        return LoadModelAsync(vmfPath, IRender.DefaultPriority);
+    }
+    public ExecutorTask<(RenderModel?, List<VError>? errors)> LoadModelAsync(string vmfPath, int priority)
+    {
         return SubmitToQueue<(RenderModel?, List<VError>? errors)>(()=>{
             VModel? model = VModelUtils.LoadModel(vmfPath, out var errors);
             if(model is null)
@@ -257,7 +360,7 @@ public class GL33Render : IRender
                 return (null, errors);
             }
             return (LoadModelRaw(model.Value, false), null);
-        }, 0);
+        }, priority, "LoadModel\"" + vmfPath + "\"");
     }
 
     //Rendering functionality
@@ -267,7 +370,7 @@ public class GL33Render : IRender
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
 
-        }, -10);
+        }, -10, "BeginRender");
     }
     public void Draw(
         IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
@@ -278,7 +381,7 @@ public class GL33Render : IRender
             DrawRaw(
                 (GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest
             );
-        }, -10);
+        }, -10, "Draw");
     }
     private void DrawRaw(
         GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
@@ -306,7 +409,7 @@ public class GL33Render : IRender
     {
         SubmitToQueue(() => {
             window.Context.SwapBuffers();
-        }, -10);
+        }, -10, "EndRender");
     }
 
 
@@ -371,7 +474,11 @@ public class GL33Render : IRender
             loopTime = DateTime.Now;
             if(loopTime - lastFrameTime > targetFrameDelta)
             {
-                mainThread.WaitUntilQueueEmpty();
+                //mainThread.WaitUntilQueueEmpty();
+                //Wait until drawing is complete.
+                // Waiting until it's fully empty is rather useless.
+                var waitTask = mainThread.QueueTask(null, -10, "RenderWait");
+                waitTask.WaitUntilDone();
                 if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime);
                 lastFrameTime = loopTime;
             }
@@ -418,7 +525,7 @@ public class GL33Render : IRender
         if(OnCleanup is not null)OnCleanup();
         var destroyWindowTask = SubmitToQueue(() => {
             window.Dispose();
-        }, 10);
+        }, 10, "DisposeRender");
         destroyWindowTask.WaitUntilDone();
         mainThread.Stop();
         disposed = true;
@@ -431,12 +538,20 @@ public class GL33Render : IRender
 
     public ExecutorTask SubmitToQueue(Action task, int priority)
     {
-        return mainThread.QueueTask(task, priority);
+        return mainThread.QueueTask(task, priority, "CustomTask");
     }
 
+    public ExecutorTask SubmitToQueue(Action task, int priority, string name)
+    {
+        return mainThread.QueueTask(task, priority, name);
+    }
     public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task, int priority)
     {
-        return mainThread.QueueTask(task, priority);
+        return mainThread.QueueTask(task, priority, "CustomTask");
+    }
+    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task, int priority, string name)
+    {
+        return mainThread.QueueTask(task, priority, name);
     }
     private SingleThreadedExecutor mainThread;
     private bool disposed = false;

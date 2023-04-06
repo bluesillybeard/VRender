@@ -27,9 +27,9 @@ public sealed class SingleThreadedExecutor
         while(running)
         {
             bool hadTask;
-
+            (int, DateTime) priority;
             lock(tasks){
-                hadTask = tasks.TryDequeue(out task, out var _);
+                hadTask = tasks.TryDequeue(out task, out priority);
             }
             if(hadTask && task is not null)
             {
@@ -54,18 +54,18 @@ public sealed class SingleThreadedExecutor
     volatile private bool running;
     private EventWaitHandle executorWaits;
     private EventWaitHandle outsiderWaits;
-    public ExecutorTask QueueTask(Action task, int priority)
+    public ExecutorTask QueueTask(Action? task, int priority, string name)
     {
-        var t = new ExecutorTask(task);
+        var t = new ExecutorTask(task, name);
         lock(tasks)this.tasks.Enqueue(t, (priority, DateTime.Now));
         executorWaits.Set();
         outsiderWaits.Reset();
         return t;
     }
 
-    public ExecutorTask<TResult> QueueTask<TResult>(Func<TResult> task, int priority)
+    public ExecutorTask<TResult> QueueTask<TResult>(Func<TResult>? task, int priority, string name)
     {
-        var t = new ExecutorTask<TResult>(task);
+        var t = new ExecutorTask<TResult>(task, name);
         lock(tasks)this.tasks.Enqueue(t, (priority, DateTime.Now));
         //Tell the main thread that there is a new task to do.
         executorWaits.Set();
