@@ -12,7 +12,7 @@ public sealed class SingleThreadedExecutor
 {
     public SingleThreadedExecutor()
     {
-        tasks = new ConcurrentQueue<ExecutorTask>();
+        tasks = new PriorityQueue<ExecutorTask, (int, DateTime)>();
         running = false;
         executorWaits = new AutoResetEvent(false);
         outsiderWaits = new ManualResetEvent(true);
@@ -23,9 +23,14 @@ public sealed class SingleThreadedExecutor
     public void Run()
     {
         running = true;
+        ExecutorTask? task;
         while(running)
         {
-            var hadTask = tasks.TryDequeue(out var task);
+            bool hadTask;
+
+            lock(tasks){
+                hadTask = tasks.TryDequeue(out task, out var _);
+            }
             if(hadTask && task is not null)
             {
                 task.Execute();
@@ -44,28 +49,24 @@ public sealed class SingleThreadedExecutor
         outsiderWaits.Dispose();
         executorWaits.Dispose();
     }
-    private ConcurrentQueue<ExecutorTask> tasks;
+    //NOTE: Priority queue isn't thread safe. That is why there are lock statements everywhere.
+    private PriorityQueue<ExecutorTask, (int, DateTime)> tasks;
     volatile private bool running;
     private EventWaitHandle executorWaits;
     private EventWaitHandle outsiderWaits;
-
-    public IEnumerable<ExecutorTask> GetScheduledTasks()
-    {
-        return tasks.AsEnumerable();
-    }
-    public ExecutorTask QueueTask(Action task)
+    public ExecutorTask QueueTask(Action task, int priority)
     {
         var t = new ExecutorTask(task);
-        this.tasks.Enqueue(t);
+        lock(tasks)this.tasks.Enqueue(t, (priority, DateTime.Now));
         executorWaits.Set();
         outsiderWaits.Reset();
         return t;
     }
 
-    public ExecutorTask<TResult> QueueTask<TResult>(Func<TResult> task)
+    public ExecutorTask<TResult> QueueTask<TResult>(Func<TResult> task, int priority)
     {
         var t = new ExecutorTask<TResult>(task);
-        this.tasks.Enqueue(t);
+        lock(tasks)this.tasks.Enqueue(t, (priority, DateTime.Now));
         //Tell the main thread that there is a new task to do.
         executorWaits.Set();
         outsiderWaits.Reset();

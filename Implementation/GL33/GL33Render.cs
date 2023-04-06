@@ -85,7 +85,7 @@ public class GL33Render : IRender
         return SubmitToQueue(() => {
             //I need to cast it here since C# doesn't like it when I cast objects with generics.
             return (IRenderTexture)new GL33Texture(image);
-        });
+        }, 0);
     }
     public ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path)
     {
@@ -95,7 +95,7 @@ public class GL33Render : IRender
     {
         return SubmitToQueue( () => {
             return LoadTextureRaw(path, dynamic);
-        });
+        }, 0);
     }
 
     private (IRenderTexture?, Exception? error) LoadTextureRaw(string path, bool dynamic)
@@ -144,7 +144,7 @@ public class GL33Render : IRender
     {
         return SubmitToQueue( ()=> {
             return (IRenderMesh) new GL33Mesh(mesh, dynamic);
-        });
+        }, 0);
     }
     public ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath)
     {
@@ -158,7 +158,7 @@ public class GL33Render : IRender
                 return (null, error);
             }
             return ((IRenderMesh) new GL33Mesh(mesh.Value, dynamic), null);
-        });
+        }, 0);
     }
 
     public IRenderShader GetShader(ShaderFeatures features)
@@ -195,7 +195,7 @@ public class GL33Render : IRender
             var shader = new GL33Shader(features);
             featuredShaders.Add(features, shader);
             return (IRenderShader) shader;
-        });
+        }, 0);
     }
 
     public ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
@@ -214,7 +214,7 @@ public class GL33Render : IRender
             var shader = new GL33Shader(GLSLFragmentCode, GLSLVertexCode, attributes);
             customShaders.Add((GLSLVertexCode, GLSLFragmentCode, attributes), shader);
             return (IRenderShader) shader;
-        });
+        }, 0);
     }
 
     public RenderModel LoadModel(VModel model)
@@ -236,7 +236,7 @@ public class GL33Render : IRender
     {
         return SubmitToQueue(()=>{
             return LoadModelRaw(model, false);
-        });
+        }, 0);
     }
 
     private RenderModel LoadModelRaw(VModel model, bool dynamic)
@@ -254,7 +254,7 @@ public class GL33Render : IRender
                 return (null, errors);
             }
             return (LoadModelRaw(model.Value, false), null);
-        });
+        }, 0);
     }
 
     //Rendering functionality
@@ -264,7 +264,7 @@ public class GL33Render : IRender
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
 
-        });
+        }, -10);
     }
     public void Draw(
         IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
@@ -275,7 +275,7 @@ public class GL33Render : IRender
             DrawRaw(
                 (GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest
             );
-        });
+        }, -10);
     }
     private void DrawRaw(
         GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
@@ -303,7 +303,7 @@ public class GL33Render : IRender
     {
         SubmitToQueue(() => {
             window.Context.SwapBuffers();
-        });
+        }, -10);
     }
 
 
@@ -387,7 +387,7 @@ public class GL33Render : IRender
         var task = SubmitToQueue(() => {
             window.ProcessInputEvents();
             NativeWindow.ProcessWindowEvents(false);
-        });
+        }, 0);
         task.WaitUntilDone();
         if(OnUpdate is not null)OnUpdate.Invoke(delta);
     }
@@ -415,7 +415,7 @@ public class GL33Render : IRender
         if(OnCleanup is not null)OnCleanup();
         var destroyWindowTask = SubmitToQueue(() => {
             window.Dispose();
-        });
+        }, 10);
         destroyWindowTask.WaitUntilDone();
         mainThread.Stop();
         disposed = true;
@@ -426,14 +426,14 @@ public class GL33Render : IRender
     }
 
 
-    public ExecutorTask SubmitToQueue(Action task)
+    public ExecutorTask SubmitToQueue(Action task, int priority)
     {
-        return mainThread.QueueTask(task);
+        return mainThread.QueueTask(task, priority);
     }
 
-    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task)
+    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task, int priority)
     {
-        return mainThread.QueueTask(task);
+        return mainThread.QueueTask(task, priority);
     }
     private SingleThreadedExecutor mainThread;
     private bool disposed = false;

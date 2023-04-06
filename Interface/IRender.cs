@@ -189,6 +189,6 @@ public interface IRender : IDisposable
 
     bool IsDisposed();
 
-    public ExecutorTask SubmitToQueue(Action task);
-    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task);
+    public ExecutorTask SubmitToQueue(Action task, int priority);
+    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task, int priority);
 }

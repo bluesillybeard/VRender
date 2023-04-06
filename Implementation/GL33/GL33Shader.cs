@@ -284,7 +284,7 @@ public class GL33Shader : IRenderShader
             //Needs to be on main thread
             IRender.CurrentRender.SubmitToQueue( () => {
                 Dispose();
-            });
+            }, 10);
             return;
         }
         GL.DeleteProgram(this.program);
