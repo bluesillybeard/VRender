@@ -28,6 +28,9 @@ using Threading;
 
 public class GL33Render : IRender
 {
+    private const int DisposePriority = 10;
+    private const int DefaultPriority = 0;
+    private const int RenderPriority = -10;
     //Must be run from main thread.
     public GL33Render(RenderSettings settings)
     {
