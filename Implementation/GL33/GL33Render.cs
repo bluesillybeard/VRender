@@ -47,6 +47,8 @@ public class GL33Render : IRender
         featuredShaders = new Dictionary<ShaderFeatures, GL33Shader>();
         customShaders = new Dictionary<(string, string, Attributes), GL33Shader>();
         window.Resize += OnResize;
+        window.MakeCurrent();
+        GLFW.SwapInterval(settings.VSync ? 1 : 0);
     }
     //Texture loading functions
     
