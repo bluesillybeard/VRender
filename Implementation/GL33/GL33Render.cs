@@ -1,4 +1,4 @@
-namespace VRender.Implementation.GL33;
+namespace VRenderLib.Implementation.GL33;
 
 using Interface;
 
@@ -122,6 +122,10 @@ public class GL33Render : IRender
     }
     public IRenderMesh LoadMesh(VMesh mesh, bool dynamic)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            return new GL33Mesh(mesh, dynamic);
+        }
         var task = LoadMeshAsync(mesh, dynamic);
         task.WaitUntilDone();
         #nullable disable
@@ -267,6 +271,7 @@ public class GL33Render : IRender
     public void BeginRenderQueue()
     {
         SubmitToQueueHighPriority(() => {
+            window.Context.SwapBuffers();
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
         }, "BeginRender");
@@ -306,9 +311,9 @@ public class GL33Render : IRender
         }
     public void EndRenderQueue()
     {
-        SubmitToQueueHighPriority(() => {
-            window.Context.SwapBuffers();
-        }, "EndRendering");
+        // SubmitToQueueHighPriority(() => {
+        //     window.Context.SwapBuffers();
+        // }, "EndRendering");
     }
 
 
@@ -375,10 +380,12 @@ public class GL33Render : IRender
             loopTime = DateTime.Now;
             if(loopTime - lastFrameTime > targetFrameDelta)
             {
+                //priorityTasksOnly = true;
                 gameThreadWaits.WaitOne();
                 BeginRenderQueue();
                 if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime);
-                lastFrameTime = loopTime;
+                priorityTasksOnly = false;
+                lastFrameTime = loopTime;;
             }
             if(loopTime - lastUpdateTime > targetUpdateDelta)
             {
@@ -399,26 +406,25 @@ public class GL33Render : IRender
         task.WaitUntilDone();
         if(OnUpdate is not null)OnUpdate.Invoke(delta);
     }
-
+    private bool priorityTasksOnly;
     private bool mainThreadRunning;
     private AutoResetEvent mainThreadWaits;
     private AutoResetEvent gameThreadWaits;
     private void MainThreadMain()
     {
+        Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
         mainThreadRunning = true;
         while(mainThreadRunning)
-        {
-            //Get a task
-            
+        {            
             if(priorityTasks.TryDequeue(out var task))
             {
                 task.Execute();
             }
-            else if(normalTasks.TryDequeue(out task))
+            else if(normalTasks.TryDequeue(out task) && !priorityTasksOnly)
             {
                 task.Execute();
             }
-            else if(lowTasks.TryDequeue(out task))
+            else if(lowTasks.TryDequeue(out task) && !priorityTasksOnly)
             {
                 task.Execute();
             }

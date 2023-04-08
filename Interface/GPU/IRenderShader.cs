@@ -1,4 +1,4 @@
-namespace VRender.Interface;
+namespace VRenderLib.Interface;
 
 using vmodel;
 public interface IRenderShader : IDisposable

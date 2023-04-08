@@ -1,6 +1,6 @@
 using vmodel;
 
-namespace VRender.Interface;
+namespace VRenderLib.Interface;
 
 public interface IRenderMesh : IDisposable
 {

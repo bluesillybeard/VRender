@@ -1,4 +1,4 @@
-namespace VRender.Threading;
+namespace VRenderLib.Threading;
 
 public class ExecutorTask
 {

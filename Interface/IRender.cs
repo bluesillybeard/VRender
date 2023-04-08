@@ -1,4 +1,4 @@
-namespace VRender.Interface;
+namespace VRenderLib.Interface;
 
 using Threading;
 

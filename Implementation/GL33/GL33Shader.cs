@@ -1,4 +1,4 @@
-namespace VRender.Implementation.GL33;
+namespace VRenderLib.Implementation.GL33;
 
 using Interface;
 

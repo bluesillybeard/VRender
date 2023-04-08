@@ -2,7 +2,7 @@ using OpenTK.Mathematics;
 using System;
 
 //This would be modified code from the OpenTK example, but their Camera class was so bad that I decided to simply write my own.
-namespace VRender.Utility;
+namespace VRenderLib.Utility;
 public class Camera
 {
     public const float radToDeg = 180.0f/MathF.PI;

@@ -1,4 +1,4 @@
-namespace VRender.Interface;
+namespace VRenderLib.Interface;
 
 public struct RenderModel
 {

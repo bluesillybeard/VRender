@@ -2,12 +2,12 @@ using OpenTK.Graphics.OpenGL;
 
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
-using VRender.Interface;
-using VRender.Threading;
+using VRenderLib.Interface;
+using VRenderLib.Threading;
 
 using StbImageSharp;
 
-namespace VRender.Implementation.GL33;
+namespace VRenderLib.Implementation.GL33;
 
 public class GL33Texture : IRenderTexture
 {
