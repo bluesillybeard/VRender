@@ -282,9 +282,9 @@ public class GL33Shader : IRenderShader
         if(Environment.CurrentManagedThreadId != 1)
         {
             //Needs to be on main thread
-            IRender.CurrentRender.SubmitToQueue( () => {
+            IRender.CurrentRender.SubmitToQueueLowPriority( () => {
                 Dispose();
-            }, 10);
+            }, "DisposeShader");
             return;
         }
         GL.DeleteProgram(this.program);

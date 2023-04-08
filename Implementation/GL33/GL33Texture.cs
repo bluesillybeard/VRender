@@ -84,10 +84,10 @@ public class GL33Texture : IRenderTexture
     {
         if(Environment.CurrentManagedThreadId != 1)
         {
-            IRender.CurrentRender.SubmitToQueue( () => 
+            IRender.CurrentRender.SubmitToQueueLowPriority( () => 
             {
                 Dispose();
-            }, -100);
+            }, "DisposeTexture");
             // The caller isn't waiting for a result, so we just move on.
             return;
         }
@@ -107,7 +107,7 @@ public class GL33Texture : IRenderTexture
             //We need to do it on the main thread so we have the OpenGL context.
             var task = IRender.CurrentRender.SubmitToQueue( () => {
                 SetData(img);
-            }, 0);
+            }, "TextureSetData");
             return;
         }
         //GL.ActiveTexture(TextureUnit.Texture0);

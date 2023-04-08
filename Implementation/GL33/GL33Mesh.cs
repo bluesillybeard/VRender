@@ -36,9 +36,9 @@ class GL33Mesh : IRenderMesh
         if(Environment.CurrentManagedThreadId != 1)
         {
             //Needs to be on main thread
-            IRender.CurrentRender.SubmitToQueue( () => {
+            IRender.CurrentRender.SubmitToQueueLowPriority( () => {
                 Dispose();
-            }, 10);
+            }, "DisposeMesh");
             return;
         }
         disposed = true;

@@ -28,70 +28,41 @@ public enum RenderType
 */
 public interface IRender : IDisposable
 {
-    public const int DisposePriority = 10;
-    public const int DefaultPriority = 0;
-    public const int RenderPriority = -10;
-    public static IRender CurrentRender => VRenderLib.Render;
-
+    public static IRender CurrentRender => VRender.Render;
 
     //Texture loading functions
     IRenderTexture LoadTexture(ImageResult image);
-    IRenderTexture LoadTexture(ImageResult image, int priority);
     ///<summary>set the dynamic flag to true if the texture will be frequently modified.</summary>
     IRenderTexture LoadTexture(ImageResult image, bool dynamic);
-    ///<summary>set the dynamic flag to true if the texture will be frequently modified.</summary>
-    IRenderTexture LoadTexture(ImageResult image, bool dynamic, int priority);
     IRenderTexture? LoadTexture(string path, out Exception? error);
-    IRenderTexture? LoadTexture(string path, out Exception? error, int priority);
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     IRenderTexture? LoadTexture(string path, bool dynamic, out Exception? error);
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    IRenderTexture? LoadTexture(string path, bool dynamic, out Exception? error, int priority);
-
     //asynchronous texture loading functions
     ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image);
-    ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image, int priority);
     //C# Tuple FTW
     ///<summary>set the dynamic flag to true if the texture will be frequently modified.</summary>
     ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image, bool dynamic);
-    ///<summary>set the dynamic flag to true if the texture will be frequently modified.</summary>
-
-    ExecutorTask<IRenderTexture> LoadTextureAsync(ImageResult image, bool dynamic, int priority);
     ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path);
-    ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, int priority);
+
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, bool dynamic);
-    ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, bool dynamic, int priority);
 
     //mesh loading functions
     IRenderMesh LoadMesh(VMesh mesh);
-    IRenderMesh LoadMesh(VMesh mesh, int priority);
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     IRenderMesh LoadMesh(VMesh mesh, bool dynamic);
-    ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    IRenderMesh LoadMesh(VMesh mesh, bool dynamic, int priority);
     IRenderMesh? LoadMesh(string vmeshPath, out Exception? error);
-    IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, int priority);
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, bool dynamic);
-    ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, bool dynamic, int priority);
 
     //async mesh loading functions
     ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh);
-    ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, int priority);
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, bool dynamic);
-    ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, bool dynamic, int priority);
     ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath);
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, int priority);
-    ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, bool dynamic);
-    ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
-    ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, bool dynamic, int priority);
 
     /**
     <summary>
@@ -106,13 +77,6 @@ public interface IRender : IDisposable
         It reuses shaders when possible.
     </summary>
     */
-    IRenderShader GetShader(ShaderFeatures features, int priority);
-    /**
-    <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
-    </summary>
-    */
     IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes);
     /**
     <summary>
@@ -120,21 +84,7 @@ public interface IRender : IDisposable
         It reuses shaders when possible.
     </summary>
     */
-    IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes, int priority);
-    /**
-    <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
-    </summary>
-    */
     ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features);
-    /**
-    <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
-    </summary>
-    */
-    ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features, int priority);
 
     /**
     <summary>
@@ -143,36 +93,17 @@ public interface IRender : IDisposable
     </summary>
     */
     ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes);
-    /**
-    <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
-    </summary>
-    */
-    ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes, int priority);
 
     RenderModel LoadModel(VModel model);
 
-    RenderModel LoadModel(VModel model, int priority);
     RenderModel? LoadModel(string vmfPath, out List<VError>? errors);
-    RenderModel? LoadModel(string vmfPath, out List<VError>? errors, int priority);
 
     ExecutorTask<RenderModel> LoadModelAsync(VModel model);
-    ExecutorTask<RenderModel> LoadModelAsync(VModel model, int priority);
     ExecutorTask<(RenderModel?, List<VError>? errors)> LoadModelAsync(string vmfPath);
-    ExecutorTask<(RenderModel?, List<VError>? errors)> LoadModelAsync(string vmfPath, int priority);
 
 
 
     //Rendering functionality
-    // These don't have priority options since they are always priority -10
-    /**
-    <summary>
-        Begins a new render queue.
-        Must only be called when there is no other render queue being generated.
-    </summary>
-    */
-    void BeginRenderQueue();
     /**
     <summary>
         Adds a draw call to the render queue.
@@ -252,6 +183,10 @@ public interface IRender : IDisposable
 
     bool IsDisposed();
 
-    public ExecutorTask SubmitToQueue(Action task, int priority);
-    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task, int priority);
+    public ExecutorTask SubmitToQueue(Action task, string name);
+    public ExecutorTask SubmitToQueueHighPriority(Action task, string name);
+    public ExecutorTask SubmitToQueueLowPriority(Action task, string name);
+    public ExecutorTask<TResult> SubmitToQueue<TResult>(Func<TResult> task, string name);
+    public ExecutorTask<TResult> SubmitToQueueHighPriority<TResult>(Func<TResult> task, string name);
+    public ExecutorTask<TResult> SubmitToQueueLowPriority<TResult>(Func<TResult> task, string name);
 }

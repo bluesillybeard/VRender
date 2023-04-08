@@ -3,7 +3,7 @@ namespace VRender;
 using Interface;
 using Implementation.GL33;
 //the VRender "main" class.
-public static class VRenderLib
+public static class VRender
 {
     /**
     <summary>
