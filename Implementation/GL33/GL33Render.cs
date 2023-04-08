@@ -380,7 +380,7 @@ public class GL33Render : IRender
             loopTime = DateTime.Now;
             if(loopTime - lastFrameTime > targetFrameDelta)
             {
-                //priorityTasksOnly = true;
+                priorityTasksOnly = true;
                 gameThreadWaits.WaitOne();
                 BeginRenderQueue();
                 if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime);
