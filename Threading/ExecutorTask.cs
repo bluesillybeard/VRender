@@ -52,6 +52,7 @@ public class ExecutorTask
     {
         while(!completed)
         {
+            Thread.Yield();
             Thread.Sleep(0);
         }
     }
@@ -69,7 +70,6 @@ public class ExecutorTask
     //Any exception that was thrown by the task
     private Exception? exception;
     //This is to make debugging eaiser; all task require a name so I can more easily track them.
-    // TODO: Remove this or make it debug-only, since once I am done debugging with it it's useless.
     public string name;
 }
 

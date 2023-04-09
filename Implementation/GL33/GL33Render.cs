@@ -385,7 +385,7 @@ public class GL33Render : IRender
                 BeginRenderQueue();
                 if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime);
                 priorityTasksOnly = false;
-                lastFrameTime = loopTime;;
+                lastFrameTime = loopTime;
             }
             if(loopTime - lastUpdateTime > targetUpdateDelta)
             {
