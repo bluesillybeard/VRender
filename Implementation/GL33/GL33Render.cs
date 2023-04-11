@@ -359,7 +359,9 @@ public class GL33Render : IRender
         //The main thread goes into its little hidey hole known as the "render queue"
         window.MakeCurrent();
         mainThread = Thread.CurrentThread;
-        MainThreadMain();
+        try{
+            MainThreadMain();
+        }catch(Exception){}
 
     }
 
