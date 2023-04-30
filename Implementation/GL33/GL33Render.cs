@@ -417,16 +417,16 @@ public class GL33Render : IRender
         Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
         mainThreadRunning = true;
         while(mainThreadRunning)
-        {            
+        {
             if(priorityTasks.TryDequeue(out var task))
             {
                 task.Execute();
             }
-            else if(normalTasks.TryDequeue(out task) && !priorityTasksOnly)
+            else if(!priorityTasksOnly && normalTasks.TryDequeue(out task))
             {
                 task.Execute();
             }
-            else if(lowTasks.TryDequeue(out task) && !priorityTasksOnly)
+            else if(!priorityTasksOnly && lowTasks.TryDequeue(out task))
             {
                 task.Execute();
             }

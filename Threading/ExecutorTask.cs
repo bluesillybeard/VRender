@@ -43,6 +43,8 @@ public class ExecutorTask
         } catch (Exception e)
         {
             exception = e;
+            //Print the error, since exceptions are supposed to be rare.
+            System.Console.Error.WriteLine("Exception: " + e.Message + "\nStacktrace:" + e.StackTrace);
         }
         completed = true;
         running = false;
@@ -55,6 +57,11 @@ public class ExecutorTask
             Thread.Yield();
             Thread.Sleep(0);
         }
+    }
+
+    public bool Completed()
+    {
+        return completed;
     }
 
     public Exception? GetException()
