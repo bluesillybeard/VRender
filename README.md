@@ -8,7 +8,8 @@ But, my VRenderExamples repository has everything you should need to get started
 It's not on Nuget, because I'm too lazy to figure out how to set that up.
 
 
-TODO list:
+TODO list (most important to least important):
+- (VERY IMPORTANT) finish the GLSL shader creation algorithm. It currently doesn't suport RGBA or RGB color, only textures.
 - implement more types of thread pools, and use an interface for them
 - Finish implementing GL33 GPU objects
 - - implement a memory leak catcher using destructor
