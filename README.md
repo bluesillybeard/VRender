@@ -1,16 +1,15 @@
 # VRender
-Voxelesque's "Not As Bad As It Used To Be" Rendering backend
+## Trilateral's "Not As Bad As It Used To Be" Rendering backend.
+it's "VRender" instead of "TRender" because it used to be called "Voxelesque" before I renamed it to "Trilateral."
 
-HOW TO USE:
-VRender is pretty simple actually.
-Too bad though because I am too lazy to make a guide.
-But, my VRenderExamples repository has everything you should need to get started.
-It's not on Nuget, because I'm too lazy to figure out how to set that up.
+### HOW TO USE:<br>
+VRender is pretty simple actually. Too bad though because I am too lazy to make a guide. But, my VRenderExamples repository has everything you should need to get started. It's not on Nuget, because I'm too lazy to figure out how to set that up.
 
 
-TODO list (most important to least important):
+### TODO list (most important to least important):
 - (VERY IMPORTANT) finish the GLSL shader creation algorithm. It currently doesn't suport RGBA or RGB color, only textures.
 - implement more types of thread pools, and use an interface for them
 - Finish implementing GL33 GPU objects
 - - implement a memory leak catcher using destructor
-- Implement instanced rendering. Automatically convert GLSL code to work with instanced rendering. They way draw calls are organized should make it pretty easy.
+- Implement instanced rendering. Automatically convert GLSL code to work with instanced rendering. The way draw calls are organized should make it pretty easy.
+- There are quite likely inline "//TODO:" comments in the code waiting to be remedied
