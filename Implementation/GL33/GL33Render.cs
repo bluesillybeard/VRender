@@ -337,7 +337,22 @@ public class GL33Render : IRender
         window.ClipboardString = clip;
     }
 
-    public bool CursorLocked{get; set;}
+    public bool CursorLocked{
+        get
+        {
+            return window.CursorState == CursorState.Grabbed;
+        }
+        set
+        {
+            if(value)
+            {
+                window.CursorState = CursorState.Grabbed;
+            } else 
+            {
+                window.CursorState = CursorState.Normal;
+            }
+        }
+    }
 
     public Vector2i WindowSize()
     {
