@@ -281,6 +281,7 @@ public class GL33Render : IRender
         IEnumerable<KeyValuePair<string, object>> uniforms,
         bool depthTest
     ){
+        if(((GL33Mesh)mesh).ElementCount() == 0)return;
         SubmitToQueueHighPriority(() => {
             DrawRaw(
                 (GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest
