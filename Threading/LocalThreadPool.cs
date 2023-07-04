@@ -55,7 +55,12 @@ public sealed class LocalThreadPool
             if(!paused && tasks.TryDequeue(out var task))
             {
                 Interlocked.Increment(ref tasksRunning);
-                task.Execute();
+                try{
+                    task.Execute();
+                } catch(Exception e)
+                {
+                    System.Console.Error.WriteLine("Pool thread got an exception:" + e.Message + "\n" + e.StackTrace);
+                }
                 Interlocked.Decrement(ref tasksRunning);
             }
             else
