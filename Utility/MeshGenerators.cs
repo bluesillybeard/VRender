@@ -142,6 +142,6 @@ public static class MeshGenerators{
     }
     private static Dictionary<int, VMesh> stringMeshCache = new Dictionary<int, VMesh>();
     // We need to keep the cache from constantly increasing memory usage
-    // I would prefer to use a priority system, but I am simply too lazy for that
+    // TODO: cache priority system
     private static Queue<int> cacheLimiter = new Queue<int>();
 }
