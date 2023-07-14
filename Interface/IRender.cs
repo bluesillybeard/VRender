@@ -134,7 +134,7 @@ public interface IRender : IDisposable
     string GetClipboard();
     void SetClipboard(string clip);
 
-    bool CursorLocked{get; set;}
+    CursorState CursorState{get; set;}
 
     Vector2i WindowSize();
 
