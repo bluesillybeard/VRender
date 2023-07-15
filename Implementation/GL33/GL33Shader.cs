@@ -8,7 +8,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 using System.Text;
-
+using System.Text.RegularExpressions;
 
 public class GL33Shader : IRenderShader
 {
@@ -219,6 +219,8 @@ public class GL33Shader : IRenderShader
 
     private static int MakeShader(ShaderType type, string shaderSource)
     {
+        //non-ascii characters are problematic
+        shaderSource = Regex.Replace(shaderSource, @"[^\u0000-\u007F]+", string.Empty);
         int shader = GL.CreateShader(type);
 
         //bind the GLSL source code
