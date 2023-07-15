@@ -44,7 +44,6 @@ public class GL33Render : IRender
             Profile = ContextProfile.Core,
         };
         window = new NativeWindow(windowSettings);
-        featuredShaders = new Dictionary<ShaderFeatures, GL33Shader>();
         customShaders = new Dictionary<(string, string, Attributes), GL33Shader>();
         window.Resize += OnResize;
         mainThreadWaits = new AutoResetEvent(false);
@@ -171,15 +170,6 @@ public class GL33Render : IRender
         }, "LoadMesh");
     }
 
-    public IRenderShader GetShader(ShaderFeatures features)
-    {
-        var task = GetShaderAsync(features);
-        task.WaitUntilDone();
-        var result = task.GetResult();
-        if(result is null) throw new Exception("Error creating shader from shader features", task.GetException());
-        return result;
-    }
-
     public IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
     {
         var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes);
@@ -187,25 +177,6 @@ public class GL33Render : IRender
         var result = task.GetResult();
         if(result is null) throw new Exception("Error compiling shader:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes, task.GetException());
         return result;
-    }
-    public ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features)
-    {
-        //Return any shader that already exists
-        if(featuredShaders.TryGetValue(features, out var shader))
-        {
-            //Make sure the shader hasn't been deleted
-            if(!shader.IsDisposed())
-            {
-                //Since they want a task, we return a task that is already done
-                var t = new ExecutorTask<IRenderShader>(shader, "GetShader");
-                return t;
-            }
-        }
-        return SubmitToQueue(() => {
-            var shader = new GL33Shader(features);
-            featuredShaders.Add(features, shader);
-            return (IRenderShader) shader;
-        }, "GetShader");
     }
 
     public ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
@@ -532,8 +503,6 @@ public class GL33Render : IRender
     private bool disposed = false;
 
     private NativeWindow window;
-
-    private Dictionary<ShaderFeatures, GL33Shader> featuredShaders;
     private Dictionary<(string, string, Attributes), GL33Shader> customShaders;
 
     private Thread? gameThread;

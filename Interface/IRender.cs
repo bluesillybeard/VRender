@@ -66,30 +66,18 @@ public interface IRender : IDisposable
 
     /**
     <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
-    </summary>
-    */
-    IRenderShader GetShader(ShaderFeatures features);
-    /**
-    <summary>
-        Returns a shader given a set of required functionality.
+        Returns a compiled shader from the given GLSL code.
+        Accepts GLSL "#version 330" and older.
         It reuses shaders when possible.
     </summary>
     */
     IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes);
-    /**
-    <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
-    </summary>
-    */
-    ExecutorTask<IRenderShader> GetShaderAsync(ShaderFeatures features);
 
     /**
     <summary>
-        Returns a shader given a set of required functionality.
-        It reuses shaders when possible.
+        Returns a compiled shader from the given GLSL code.
+        Accepts GLSL "#version 330" and older.
+        The only value given by the Render itself is uniform Sampler2D tex.
     </summary>
     */
     ExecutorTask<IRenderShader> GetShaderAsync(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes);

@@ -12,16 +12,6 @@ using System.Text;
 
 public class GL33Shader : IRenderShader
 {
-    public GL33Shader(ShaderFeatures features)
-    {
-        //generate vertex shader
-        string vertexCode = GenerateGLSLVertexCode(features);
-        string fragmentCode = GenerateGLSLFragmentCode(features);
-        //load the shader
-        LoadShader(vertexCode, fragmentCode, out program, out uniforms);
-        this.features = features;
-        this.attributes = features.attributes;
-    }
 
     /**
     <summary>
@@ -31,119 +21,7 @@ public class GL33Shader : IRenderShader
     public GL33Shader(string fragmentCode, string vertexCode, Attributes attributes)
     {
         LoadShader(vertexCode, fragmentCode, out program, out uniforms);
-        this.features = null;
         this.attributes = attributes;
-    }
-
-    //TODO: these code generators are incomplete, as they don't have RGB or RGBA color support.
-    public static string GenerateGLSLFragmentCode(ShaderFeatures features)
-    {
-        StringBuilder code = new StringBuilder();
-        code.Append("#version 330 core\n");
-        code.Append("out vec4 colorOut;\n");
-        //In vars
-        bool hasTextureCoords = features.attributes.Contains(EAttribute.textureCoords);
-        if(hasTextureCoords)
-        {
-            code.Append("in vec2 texCoord;\n");
-        }
-        //Texture uniform - this is always absolutely required
-        code.Append("uniform sampler2D tex;\n");
-        //Actual program
-        code.Append("void main(){\n");
-        //color output
-        code.Append("colorOut = ");
-        if(hasTextureCoords)
-        {
-            code.Append("texture(tex, texCoord);\n");
-        } else
-        {
-            code.Append("vec4(0, 0, 0, 0);\n");
-        }
-        code.Append("if(colorOut.a < .5)discard;\n");
-        code.Append("}");
-
-        return code.ToString();
-    }
-
-    public static string GenerateGLSLVertexCode(ShaderFeatures features)
-    {
-        StringBuilder vertexShader = new StringBuilder();
-        vertexShader.Append("#version 330 core\n");
-        //Keep track of some things for later
-        int texCoordLayout = -1;
-        int positionLayout = -1;
-        //First, generate the GLSL layouts
-        for(int layout=0; layout<features.attributes.Length; layout++)
-        {
-            EAttribute attributeFull = features.attributes[layout];
-            string name = Enum.GetName(typeof(EAttribute), attributeFull) ?? "float";
-            //Convert the general Attribute into just its type.
-            // Since these are named based on what they are using the same naming sceheme as GLSL,
-            // I can simply just take its type name and use that.
-            EAttribute type = (EAttribute)((int)attributeFull % 5);
-            string typeName = Enum.GetName(typeof(EAttribute), type) ?? "float";
-            if(typeName == "scalar") typeName = "float";
-            //                                       |layout idx  |type     |variable name
-            vertexShader.Append($"layout(location = {layout}) in {typeName} v{layout}{name};\n");
-
-            //Keep track of some things for later
-            if(attributeFull is EAttribute.position)
-            {
-                positionLayout = layout;
-            } else if(attributeFull is EAttribute.textureCoords)
-            {
-                texCoordLayout = layout;
-            }
-        }
-        //generate out variables.
-        // For now, the output will always be just a texture coordinate (If the attributes even have texture coordinates!)
-        // TODO: add more out variables based on attributes (hardest part is in the fragment shader actually)
-        bool hasTextureCoords = features.attributes.Contains(EAttribute.textureCoords);
-        if(hasTextureCoords)
-        {
-            vertexShader.Append("out vec2 texCoord;\n");
-        }
-        //Generate uniforms
-        if(features.applyCameraTransform)
-        {
-            vertexShader.Append("uniform mat4 camera;\n");
-        }
-        if(features.applyModelTransform)
-        {
-            vertexShader.Append("uniform mat4 model;\n");
-        }
-        //generate the shader code itself
-        vertexShader.Append("void main(){\n");
-
-        //Set output vars
-        if(hasTextureCoords)
-        {
-            vertexShader.Append($"texCoord = v{texCoordLayout}textureCoords;\n");
-        }
-        //set gl_Position
-        if(positionLayout != -1)
-        {
-            vertexShader.Append($"gl_Position = vec4(v{positionLayout}position, 1.0)");
-        }
-        else{
-            //This probably shouldn't be a thing, but I am doing it anyway.
-            vertexShader.Append($"gl_Position = vec4(0, 0, 0, 0)");
-        }
-        if(features.applyModelTransform)
-        {
-            vertexShader.Append($" * model");
-        }
-        if(features.applyCameraTransform)
-        {
-            vertexShader.Append($" * camera");
-        }
-        vertexShader.Append(";\n");
-
-        //We are done!
-        vertexShader.Append("}\n");
-
-        return vertexShader.ToString();
     }
     public Attributes GetAttributes()
     {
@@ -291,14 +169,8 @@ public class GL33Shader : IRenderShader
         disposed = true;
     }
 
-    public ShaderFeatures? GetFeatures()
-    {
-        return features;
-    }
-
     private int program;
     private bool disposed;
-    private ShaderFeatures? features;
     private Attributes attributes;
     private Dictionary<string, int> uniforms;
     
