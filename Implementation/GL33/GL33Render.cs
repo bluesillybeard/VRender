@@ -16,6 +16,7 @@ using Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Diagnostics.Tracing;
 
 //Here is an explanation of how the command queue works, in text form:
 // When Run() is called, a new thread is spawned called the "logic" thread - it does all of the game logic
@@ -64,6 +65,10 @@ public class GL33Render : IRender
     }
     public IRenderTexture LoadTexture(ImageResult image, bool dynamic)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            return (IRenderTexture)new GL33Texture(image);
+        }
         var task = LoadTextureAsync(image, dynamic);
         task.WaitUntilDone();
         #nullable disable
@@ -76,6 +81,12 @@ public class GL33Render : IRender
     }
     public IRenderTexture? LoadTexture(string path, bool dynamic, out Exception? error)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            var raw = LoadTextureRaw(path, dynamic);
+            error = raw.error;
+            return raw.Item1;
+        }
         var task = LoadTextureAsync(path, dynamic);
         task.WaitUntilDone();
         var result = task.GetResult();
@@ -141,6 +152,14 @@ public class GL33Render : IRender
     }
     public IRenderMesh? LoadMesh(string vmeshPath, out Exception? error, bool dynamic)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            VMesh? mesh = VModelUtils.LoadMesh(vmeshPath, out error);
+            if(mesh is null){
+                return null;
+            }
+            return (IRenderMesh) new GL33Mesh(mesh.Value, dynamic);
+        }
         var task = LoadMeshAsync(vmeshPath, dynamic);
         task.WaitUntilDone();
         var result = task.GetResult();
@@ -176,6 +195,12 @@ public class GL33Render : IRender
 
     public IRenderShader GetShader(string GLSLVertexCode, string GLSLFragmentCode, Attributes attributes)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            var shader = new GL33Shader(GLSLFragmentCode, GLSLVertexCode, attributes);
+            customShaders.Add((GLSLVertexCode, GLSLFragmentCode, attributes), shader);
+            return (IRenderShader) shader;
+        }
         var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes);
         task.WaitUntilDone();
         var result = task.GetResult();
@@ -204,12 +229,25 @@ public class GL33Render : IRender
 
     public RenderModel LoadModel(VModel model)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            return LoadModelRaw(model, false);
+        }
         var task = LoadModelAsync(model);
         task.WaitUntilDone();
         return task.GetResult();
     }
     public RenderModel? LoadModel(string vmfPath, out List<VError>? errors)
     {
+        if(Environment.CurrentManagedThreadId == 1)
+        {
+            VModel? model = VModelUtils.LoadModel(vmfPath, out errors);
+            if(model is null)
+            {
+                return null;
+            }
+            return LoadModelRaw(model.Value, false);
+        }
         var task = LoadModelAsync(vmfPath);
         task.WaitUntilDone();
         var res = task.GetResult();
@@ -241,56 +279,6 @@ public class GL33Render : IRender
             return (LoadModelRaw(model.Value, false), null);
         }, "LoadModel " + vmfPath);
     }
-
-    //Rendering functionality
-    // public void BeginRenderQueue()
-    // {
-    //     SubmitToQueueHighPriority(() => {
-    //         GL.ClearColor(0, 0, 0, 1);
-    //         GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
-    //     }, "BeginRender");
-    // }
-    // public void Draw(
-    //     IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
-    //     IEnumerable<KeyValuePair<string, object>> uniforms,
-    //     bool depthTest
-    // ){
-    //     if(((GL33Mesh)mesh).ElementCount() == 0)return;
-    //     SubmitToQueueHighPriority(() => {
-    //         DrawRaw(
-    //             (GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest
-    //         );
-    //     }, "DrawObject");
-    // }
-    // private void DrawRaw(
-    //     GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
-    //     IEnumerable<KeyValuePair<string, object>> uniforms,
-    //     bool depthTest
-    //     )
-    //     {
-    //         //use objects
-    //         texture.Use(OpenTK.Graphics.OpenGL.TextureUnit.Texture0);
-    //         mesh.Use();
-    //         shader.Use();
-    //         //set uniforms
-    //         foreach(var uniform in uniforms)
-    //         {
-    //             shader.SetUniform(uniform.Key, uniform.Value, out var error);
-    //             if(error != null) System.Console.Error.WriteLine("Error setting shader uniform: " + error);
-    //         }
-    //         shader.SetInt("tex", 0, out _);
-    //         //other GL variables
-    //         if(depthTest) GL.Enable(EnableCap.DepthTest);
-    //         else GL.Disable(EnableCap.DepthTest);
-    //         GL.DrawElements(BeginMode.Triangles, (int)mesh.ElementCount()*3, DrawElementsType.UnsignedInt, 0);
-    //     }
-    // public void EndRenderQueue()
-    // {
-    //     SubmitToQueueHighPriority(() => {
-    //         window.Context.SwapBuffers();
-    //     }, "EndRendering");
-    // }
-
 
     //System stuff
     public KeyboardState Keyboard()

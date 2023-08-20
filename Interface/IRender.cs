@@ -25,6 +25,10 @@ public enum RenderType
 
     Note that once Run() is called, the main thread is hidden away and all logic is done on a secondary thread.
     In other words, don't rely on the main thread.
+
+
+    Some things to know:
+    -synchronous methods that rely on the main thread (such as LoadTexture or LoadModel) will actually run on the main thread and are thread safe. They can also be safely called from the main thread.
 */
 public interface IRender : IDisposable
 {
