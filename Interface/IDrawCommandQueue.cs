@@ -17,6 +17,16 @@ public interface IDrawCommandQueue
         IEnumerable<KeyValuePair<string, object>> uniforms,
         bool depthTest
     );
+
+    /**
+    <summary>
+        Draws something immediately.
+        Must only be called from within a custom queue action
+    </summary>
+    */
+    public void DrawDirect(IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
+        IEnumerable<KeyValuePair<string, object>> uniforms,
+        bool depthTest);
     void Custom(Action action);
     /**
     <summary>

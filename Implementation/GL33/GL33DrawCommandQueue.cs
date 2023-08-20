@@ -25,6 +25,13 @@ class GL33DrawCommandQueue : IDrawCommandQueue
         drawCommands.Add(() => {DrawRaw((GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest);});
     }
 
+    public void DrawDirect(IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
+        IEnumerable<KeyValuePair<string, object>> uniforms,
+        bool depthTest)
+    {
+        DrawRaw((GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest);
+    }
+
     private void DrawRaw(
         GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
         IEnumerable<KeyValuePair<string, object>> uniforms,
