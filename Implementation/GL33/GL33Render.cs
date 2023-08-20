@@ -42,6 +42,7 @@ public class GL33Render : IRender
             APIVersion = new Version(3, 3),
             AutoLoadBindings = true,
             Profile = ContextProfile.Core,
+            Vsync = settings.VSync ? VSyncMode.On : VSyncMode.Off,
         };
         window = new NativeWindow(windowSettings);
         customShaders = new Dictionary<(string, string, Attributes), GL33Shader>();
@@ -239,54 +240,53 @@ public class GL33Render : IRender
     }
 
     //Rendering functionality
-    public void BeginRenderQueue()
-    {
-        SubmitToQueueHighPriority(() => {
-            window.Context.SwapBuffers();
-            GL.ClearColor(0, 0, 0, 1);
-            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
-        }, "BeginRender");
-    }
-    public void Draw(
-        IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
-        IEnumerable<KeyValuePair<string, object>> uniforms,
-        bool depthTest
-    ){
-        if(((GL33Mesh)mesh).ElementCount() == 0)return;
-        SubmitToQueueHighPriority(() => {
-            DrawRaw(
-                (GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest
-            );
-        }, "DrawObject");
-    }
-    private void DrawRaw(
-        GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
-        IEnumerable<KeyValuePair<string, object>> uniforms,
-        bool depthTest
-        )
-        {
-            //use objects
-            texture.Use(OpenTK.Graphics.OpenGL.TextureUnit.Texture0);
-            mesh.Use();
-            shader.Use();
-            //set uniforms
-            foreach(var uniform in uniforms)
-            {
-                shader.SetUniform(uniform.Key, uniform.Value, out var error);
-                if(error != null) System.Console.Error.WriteLine("Error setting shader uniform: " + error);
-            }
-            shader.SetInt("tex", 0, out _);
-            //other GL variables
-            if(depthTest) GL.Enable(EnableCap.DepthTest);
-            else GL.Disable(EnableCap.DepthTest);
-            GL.DrawElements(BeginMode.Triangles, (int)mesh.ElementCount()*3, DrawElementsType.UnsignedInt, 0);
-        }
-    public void EndRenderQueue()
-    {
-        // SubmitToQueueHighPriority(() => {
-        //     window.Context.SwapBuffers();
-        // }, "EndRendering");
-    }
+    // public void BeginRenderQueue()
+    // {
+    //     SubmitToQueueHighPriority(() => {
+    //         GL.ClearColor(0, 0, 0, 1);
+    //         GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+    //     }, "BeginRender");
+    // }
+    // public void Draw(
+    //     IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
+    //     IEnumerable<KeyValuePair<string, object>> uniforms,
+    //     bool depthTest
+    // ){
+    //     if(((GL33Mesh)mesh).ElementCount() == 0)return;
+    //     SubmitToQueueHighPriority(() => {
+    //         DrawRaw(
+    //             (GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest
+    //         );
+    //     }, "DrawObject");
+    // }
+    // private void DrawRaw(
+    //     GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
+    //     IEnumerable<KeyValuePair<string, object>> uniforms,
+    //     bool depthTest
+    //     )
+    //     {
+    //         //use objects
+    //         texture.Use(OpenTK.Graphics.OpenGL.TextureUnit.Texture0);
+    //         mesh.Use();
+    //         shader.Use();
+    //         //set uniforms
+    //         foreach(var uniform in uniforms)
+    //         {
+    //             shader.SetUniform(uniform.Key, uniform.Value, out var error);
+    //             if(error != null) System.Console.Error.WriteLine("Error setting shader uniform: " + error);
+    //         }
+    //         shader.SetInt("tex", 0, out _);
+    //         //other GL variables
+    //         if(depthTest) GL.Enable(EnableCap.DepthTest);
+    //         else GL.Disable(EnableCap.DepthTest);
+    //         GL.DrawElements(BeginMode.Triangles, (int)mesh.ElementCount()*3, DrawElementsType.UnsignedInt, 0);
+    //     }
+    // public void EndRenderQueue()
+    // {
+    //     SubmitToQueueHighPriority(() => {
+    //         window.Context.SwapBuffers();
+    //     }, "EndRendering");
+    // }
 
 
     //System stuff
@@ -345,7 +345,6 @@ public class GL33Render : IRender
         }catch(Exception){}
 
     }
-
     private void GameThreadMain()
     {
         Thread.CurrentThread.Name = "Game";
@@ -365,8 +364,12 @@ public class GL33Render : IRender
             {
                 priorityTasksOnly = true;
                 gameThreadWaits.WaitOne();
-                BeginRenderQueue();
-                if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime);
+                var queue = new GL33DrawCommandQueue();
+
+                if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime, queue);
+                SubmitToQueueHighPriority(() => {queue.Process(window);}, "DrawFrame");
+                //TODO: reuse queue between frames
+                // TODO: possibly use queue to have multiple frames in process at once to increase performance
                 priorityTasksOnly = false;
                 lastFrameTime = loopTime;
             }
@@ -422,7 +425,7 @@ public class GL33Render : IRender
     }
 
     public Action<TimeSpan>? OnUpdate {get;set;}
-    public Action<TimeSpan>? OnDraw {get;set;}
+    public Action<TimeSpan, IDrawCommandQueue>? OnDraw {get;set;}
     public Action? OnStart {get;set;}
     public Action? OnCleanup {get;set;}
     

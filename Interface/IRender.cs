@@ -89,30 +89,7 @@ public interface IRender : IDisposable
     ExecutorTask<RenderModel> LoadModelAsync(VModel model);
     ExecutorTask<(RenderModel?, List<VError>? errors)> LoadModelAsync(string vmfPath);
 
-
-
-    //Rendering functionality
-    /**
-    <summary>
-        Adds a draw call to the render queue.
-        Must be called during an active queue, in other words after a 'BeginRenderQueue' and before a 'EndRenderQueue'.
-        It is thread safe.
-    </summary>
-    */
-    void Draw(
-        IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
-        IEnumerable<KeyValuePair<string, object>> uniforms,
-        bool depthTest
-    );
-    /**
-    <summary>
-        Ends a render queue.
-        This will wait until the render thread is finished rendering,
-        and the render thread will wait until this is called to swap the buffers.
-    </summary>
-    */
-    void EndRenderQueue();
-
+    //rendering
 
     //System stuff
     KeyboardState Keyboard();
@@ -151,7 +128,7 @@ public interface IRender : IDisposable
         Note that this might be called while the game logic is running.
     </summary>
     */
-    Action<TimeSpan>? OnDraw {get;set;}
+    Action<TimeSpan, IDrawCommandQueue>? OnDraw {get;set;}
 
     /**
     <summary>
