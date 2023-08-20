@@ -14,6 +14,9 @@ using OpenTK.Graphics.OpenGL;
 
 using Threading;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+
 //Here is an explanation of how the command queue works, in text form:
 // When Run() is called, a new thread is spawned called the "logic" thread - it does all of the game logic
 // The main thread becomes the worker thread for the command queue
@@ -52,7 +55,7 @@ public class GL33Render : IRender
         lowTasks = new ConcurrentQueue<ExecutorTask>();
         normalTasks = new ConcurrentQueue<ExecutorTask>();
         priorityTasks = new ConcurrentQueue<ExecutorTask>();
-
+        freeCommandQueues = new List<GL33DrawCommandQueue>();
     }
      //Texture loading functions
     public IRenderTexture LoadTexture(ImageResult image)
@@ -345,6 +348,21 @@ public class GL33Render : IRender
         }catch(Exception){}
 
     }
+
+    private GL33DrawCommandQueue GetFreeDrawCommandQueue()
+    {
+        lock(freeCommandQueues)
+        {
+            if(freeCommandQueues.Count > 0)
+            {
+                var queue = freeCommandQueues[0];
+                freeCommandQueues.RemoveAt(0);
+                return queue;
+            }
+            return new GL33DrawCommandQueue();
+        }
+        
+    }
     private void GameThreadMain()
     {
         Thread.CurrentThread.Name = "Game";
@@ -352,33 +370,37 @@ public class GL33Render : IRender
         //The game thread takes over the majority of operations
         // while the main thread spends the rest of its life in a pit of despair
         // doing endless boring repetitive tasks
-        DateTime loopTime;
-        DateTime lastFrameTime = DateTime.Now;
-        DateTime lastUpdateTime = DateTime.Now;
+        Stopwatch frameTimer = new Stopwatch();
+        frameTimer.Start();
+        Stopwatch updateTimer = new Stopwatch();
+        updateTimer.Start();
         TimeSpan targetUpdateDelta = TimeSpan.FromSeconds(1.0/30.0);
         TimeSpan targetFrameDelta = TimeSpan.FromSeconds(settings.TargetFrameTime);
         while(!window.IsExiting)
         {
-            loopTime = DateTime.Now;
-            if(loopTime - lastFrameTime > targetFrameDelta)
+            var frameDelta = frameTimer.Elapsed;
+            if(frameDelta > targetFrameDelta)
             {
+                frameTimer.Restart();
                 priorityTasksOnly = true;
+                var drawCommandQueue = GetFreeDrawCommandQueue();
+                if(OnDraw is not null)OnDraw.Invoke(frameDelta, drawCommandQueue);
                 gameThreadWaits.WaitOne();
-                var queue = new GL33DrawCommandQueue();
-
-                if(OnDraw is not null)OnDraw.Invoke(loopTime - lastFrameTime, queue);
-                SubmitToQueueHighPriority(() => {queue.Process(window);}, "DrawFrame");
-                //TODO: reuse queue between frames
+                SubmitToQueueHighPriority(() => {
+                    drawCommandQueue.Process(window);
+                    drawCommandQueue.Reset();
+                    lock(freeCommandQueues) freeCommandQueues.Add(drawCommandQueue);
+                    }, "DrawFrame");
                 // TODO: possibly use queue to have multiple frames in process at once to increase performance
                 priorityTasksOnly = false;
-                lastFrameTime = loopTime;
             }
-            if(loopTime - lastUpdateTime > targetUpdateDelta)
+            var updateElapsed = updateTimer.Elapsed;
+            if(updateElapsed > targetUpdateDelta)
             {
-                Update(loopTime - lastUpdateTime);
-                lastUpdateTime = loopTime;
+                updateTimer.Restart();
+                Update(updateElapsed);
             }
-            Thread.Sleep(0);
+            Thread.Yield();
         }
         Dispose();
     }
@@ -513,7 +535,7 @@ public class GL33Render : IRender
     private ConcurrentQueue<ExecutorTask> lowTasks;
     private ConcurrentQueue<ExecutorTask> normalTasks;
     private ConcurrentQueue<ExecutorTask> priorityTasks;
-    
-
     private RenderSettings settings;
+    private     List<GL33DrawCommandQueue> freeCommandQueues;
+
 }

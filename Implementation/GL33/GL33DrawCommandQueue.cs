@@ -10,6 +10,7 @@ class GL33DrawCommandQueue : IDrawCommandQueue
 {
     List<Action> drawCommands;
 
+
     public GL33DrawCommandQueue()
     {
         drawCommands = new List<Action>();
@@ -64,5 +65,10 @@ class GL33DrawCommandQueue : IDrawCommandQueue
             action.Invoke();
         }
         window.Context.SwapBuffers();
+    }
+
+    public void Reset()
+    {
+        drawCommands.Clear();
     }
 }
