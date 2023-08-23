@@ -5,7 +5,7 @@ using VRenderLib.Interface;
 
 namespace VRenderLib.Implementation.GL33;
 
-class GL33DrawCommandQueue : IDrawCommandQueue
+sealed class GL33DrawCommandQueue : IDrawCommandQueue
 {
     readonly List<Action> drawCommands;
 

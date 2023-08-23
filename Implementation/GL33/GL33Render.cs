@@ -56,6 +56,8 @@ public sealed class GL33Render : IRender
         normalTasks = new ConcurrentQueue<ExecutorTask>();
         priorityTasks = new ConcurrentQueue<ExecutorTask>();
         freeCommandQueues = new List<GL33DrawCommandQueue>();
+        //TODO: redo models and mesh generation to support winding-based face culling
+        //GL.Enable(EnableCap.CullFace);
     }
      //Texture loading functions
     public IRenderTexture LoadTexture(ImageResult image)
@@ -66,7 +68,7 @@ public sealed class GL33Render : IRender
     {
         if(Environment.CurrentManagedThreadId == 1)
         {
-            return (IRenderTexture)new GL33Texture(image);
+            return new GL33Texture(image);
         }
         var task = LoadTextureAsync(image, dynamic);
         task.WaitUntilDone();
@@ -184,7 +186,7 @@ public sealed class GL33Render : IRender
             if(mesh is null){
                 return (null, error);
             }
-            return ((IRenderMesh) new GL33Mesh(mesh.Value, dynamic), null);
+            return (new GL33Mesh(mesh.Value, dynamic), null);
         }, "LoadMesh");
     }
 
@@ -418,7 +420,6 @@ public sealed class GL33Render : IRender
                     gameThreadWaits.Set();
                     mainThreadWaits.WaitOne(1000);
                 }
-                //System.Console.WriteLine("hello");
             }
         } catch (Exception e)
         {

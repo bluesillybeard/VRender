@@ -6,8 +6,7 @@ using vmodel;
 
 using OpenTK.Graphics.OpenGL;
 
-//TODO: refactor all of this to use the command queue
-class GL33Mesh : IRenderMesh
+sealed class GL33Mesh : IRenderMesh
 {
     public Attributes GetAttributes()
     {
