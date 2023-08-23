@@ -10,9 +10,8 @@ using OpenTK.Mathematics;
 using System.Text;
 using System.Text.RegularExpressions;
 
-public class GL33Shader : IRenderShader
+public sealed partial class GL33Shader : IRenderShader
 {
-
     /**
     <summary>
         Relies on the GL context
@@ -149,34 +148,29 @@ public class GL33Shader : IRenderShader
         }else if(data is Vector4 vector4)
         {
             SetVector4(name, vector4, out error);
-        } else 
+        } else
         {
             error = name + " is not one of the supported types";
         }
-
     }
 
     public void Dispose(){
         if(Environment.CurrentManagedThreadId != 1)
         {
             //Needs to be on main thread
-            IRender.CurrentRender.SubmitToQueueLowPriority( () => {
-                Dispose();
-            }, "DisposeShader");
+            IRender.CurrentRender.SubmitToQueueLowPriority(() => Dispose(), "DisposeShader");
             return;
         }
         GL.DeleteProgram(this.program);
         disposed = true;
     }
 
-    private int program;
+    private readonly int program;
     private bool disposed;
-    private Attributes attributes;
-    private Dictionary<string, int> uniforms;
-    
+    private readonly Attributes attributes;
+    private readonly Dictionary<string, int> uniforms;
     private static void LoadShader(string vertexSource, string fragmentSource, out int program, out Dictionary<string, int> uniforms)
     {
-
         int vertexShader = MakeShader(ShaderType.VertexShader, vertexSource);
         int fragmentShader = MakeShader(ShaderType.FragmentShader, fragmentSource);
 
@@ -217,10 +211,13 @@ public class GL33Shader : IRenderShader
         }
     }
 
+    [GeneratedRegex(@"[^\u0000-\u007F]+")]
+    private static partial Regex NonAsciiRegex();
+
     private static int MakeShader(ShaderType type, string shaderSource)
     {
         //non-ascii characters are problematic
-        shaderSource = Regex.Replace(shaderSource, @"[^\u0000-\u007F]+", string.Empty);
+        shaderSource = NonAsciiRegex().Replace(shaderSource, string.Empty);
         int shader = GL.CreateShader(type);
 
         //bind the GLSL source code

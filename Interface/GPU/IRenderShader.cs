@@ -13,4 +13,3 @@ public interface IRenderShader : IDisposable
     */
     bool IsDisposed();
 }
-

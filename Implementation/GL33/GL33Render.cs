@@ -30,14 +30,13 @@ using System.Diagnostics.Tracing;
 
 // All functions that require an OpenGl context are run through the command queue, so synchronous ones block until that task has been finished.
 
-
-public class GL33Render : IRender
+public sealed class GL33Render : IRender
 {
     //Must be run from main thread.
     public GL33Render(RenderSettings settings)
     {
         this.settings = settings;
-        NativeWindowSettings windowSettings = new NativeWindowSettings()
+        NativeWindowSettings windowSettings = new()
         {
             StartVisible = true,
             Title = settings.WindowTitle,
@@ -113,12 +112,10 @@ public class GL33Render : IRender
     }
     public ExecutorTask<(IRenderTexture?, Exception? error)> LoadTextureAsync(string path, bool dynamic)
     {
-        return SubmitToQueue( () => {
-            return LoadTextureRaw(path, dynamic);
-        }, "LoadTexture " + path);
+        return SubmitToQueue(() => LoadTextureRaw(path, dynamic), "LoadTexture " + path);
     }
 
-    private (IRenderTexture?, Exception? error) LoadTextureRaw(string path, bool dynamic)
+    private static (IRenderTexture?, Exception? error) LoadTextureRaw(string path, bool dynamic)
     {
         try{
             ImageResult img = ImageResult.FromStream(new FileStream(path, FileMode.Open));
@@ -174,9 +171,7 @@ public class GL33Render : IRender
     }
     public ExecutorTask<IRenderMesh> LoadMeshAsync(VMesh mesh, bool dynamic)
     {
-        return SubmitToQueue(()=> {
-            return (IRenderMesh) new GL33Mesh(mesh, dynamic);
-        }, "LoadMesh");
+        return SubmitToQueue(() => (IRenderMesh)new GL33Mesh(mesh, dynamic), "LoadMesh");
     }
     public ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath)
     {
@@ -203,8 +198,7 @@ public class GL33Render : IRender
         }
         var task = GetShaderAsync(GLSLVertexCode, GLSLFragmentCode, attributes);
         task.WaitUntilDone();
-        var result = task.GetResult();
-        if(result is null) throw new Exception("Error compiling shader:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes, task.GetException());
+        var result = task.GetResult() ?? throw new Exception("Error compiling shader:\nGLSL Vertex:" + GLSLVertexCode + "\nGLSL Fragment:" + GLSLFragmentCode + "]nAttributes:" + attributes, task.GetException());
         return result;
     }
 
@@ -257,12 +251,10 @@ public class GL33Render : IRender
 
     public ExecutorTask<RenderModel> LoadModelAsync(VModel model)
     {
-        return SubmitToQueue(()=>{
-            return LoadModelRaw(model, false);
-        }, "LoadModel");
+        return SubmitToQueue(() => LoadModelRaw(model, false), "LoadModel");
     }
 
-    private RenderModel LoadModelRaw(VModel model, bool dynamic)
+    private static RenderModel LoadModelRaw(VModel model, bool dynamic)
     {
         var mesh = new GL33Mesh(model.mesh, dynamic);
         var texture = new GL33Texture(model.texture);
@@ -330,11 +322,7 @@ public class GL33Render : IRender
         gameThread.Start();
         //The main thread goes into its little hidey hole known as the "render queue"
         window.MakeCurrent();
-        mainThread = Thread.CurrentThread;
-        try{
-            MainThreadMain();
-        }catch(Exception){}
-
+        MainThreadMain();
     }
 
     private GL33DrawCommandQueue GetFreeDrawCommandQueue()
@@ -349,18 +337,17 @@ public class GL33Render : IRender
             }
             return new GL33DrawCommandQueue();
         }
-        
     }
     private void GameThreadMain()
     {
         Thread.CurrentThread.Name = "Game";
-        if(OnStart is not null)OnStart.Invoke();
+        OnStart?.Invoke();
         //The game thread takes over the majority of operations
         // while the main thread spends the rest of its life in a pit of despair
         // doing endless boring repetitive tasks
-        Stopwatch frameTimer = new Stopwatch();
+        Stopwatch frameTimer = new();
         frameTimer.Start();
-        Stopwatch updateTimer = new Stopwatch();
+        Stopwatch updateTimer = new();
         updateTimer.Start();
         TimeSpan targetUpdateDelta = TimeSpan.FromSeconds(1.0/30.0);
         TimeSpan targetFrameDelta = TimeSpan.FromSeconds(settings.TargetFrameTime);
@@ -372,7 +359,7 @@ public class GL33Render : IRender
                 frameTimer.Restart();
                 priorityTasksOnly = true;
                 var drawCommandQueue = GetFreeDrawCommandQueue();
-                if(OnDraw is not null)OnDraw.Invoke(frameDelta, drawCommandQueue);
+                OnDraw?.Invoke(frameDelta, drawCommandQueue);
                 gameThreadWaits.WaitOne();
                 SubmitToQueueHighPriority(() => {
                     drawCommandQueue.Process(window);
@@ -400,12 +387,12 @@ public class GL33Render : IRender
             NativeWindow.ProcessWindowEvents(false);
         }, "ProcessEvents");
         task.WaitUntilDone();
-        if(OnUpdate is not null)OnUpdate.Invoke(delta);
+        OnUpdate?.Invoke(delta);
     }
     private bool priorityTasksOnly;
     private bool mainThreadRunning;
-    private AutoResetEvent mainThreadWaits;
-    private AutoResetEvent gameThreadWaits;
+    private readonly AutoResetEvent mainThreadWaits;
+    private readonly AutoResetEvent gameThreadWaits;
     private void MainThreadMain()
     {
         Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
@@ -424,7 +411,7 @@ public class GL33Render : IRender
             {
                 task.Execute();
             }
-            else 
+            else
             {
                 //There was no task. ):
                 gameThreadWaits.Set();
@@ -438,7 +425,6 @@ public class GL33Render : IRender
     public Action<TimeSpan, IDrawCommandQueue>? OnDraw {get;set;}
     public Action? OnStart {get;set;}
     public Action? OnCleanup {get;set;}
-    
     //TODO: IO events
     public Action<KeyboardKeyEventArgs>? OnKeyDown {get; set;}
     public Action<KeyboardKeyEventArgs>? OnKeyUp {get; set;}
@@ -448,16 +434,14 @@ public class GL33Render : IRender
 
     private void OnResize(ResizeEventArgs args)
     {
-        if(OnWindowResize is not null)OnWindowResize.Invoke(args);
+        OnWindowResize?.Invoke(args);
         GL.Viewport(0, 0, args.Width, args.Height);
     }
 
     public void Dispose()
     {
         if(OnCleanup is not null)OnCleanup();
-        var destroyWindowTask = SubmitToQueue(() => {
-            window.Dispose();
-        }, "DisposeRender");
+        var destroyWindowTask = SubmitToQueue(() => window.Dispose(), "DisposeRender");
         destroyWindowTask.WaitUntilDone();
         mainThreadRunning = false;
         mainThreadWaits.Set();
@@ -470,7 +454,6 @@ public class GL33Render : IRender
     {
         return disposed;
     }
-
 
     public ExecutorTask SubmitToQueue(Action task, string name)
     {
@@ -515,15 +498,13 @@ public class GL33Render : IRender
     }
     private bool disposed = false;
 
-    private NativeWindow window;
-    private Dictionary<(string, string, Attributes), GL33Shader> customShaders;
+    private readonly NativeWindow window;
+    private readonly Dictionary<(string, string, Attributes), GL33Shader> customShaders;
 
     private Thread? gameThread;
-    private Thread? mainThread;
-    private ConcurrentQueue<ExecutorTask> lowTasks;
-    private ConcurrentQueue<ExecutorTask> normalTasks;
-    private ConcurrentQueue<ExecutorTask> priorityTasks;
+    private readonly ConcurrentQueue<ExecutorTask> lowTasks;
+    private readonly ConcurrentQueue<ExecutorTask> normalTasks;
+    private readonly ConcurrentQueue<ExecutorTask> priorityTasks;
     private RenderSettings settings;
-    private     List<GL33DrawCommandQueue> freeCommandQueues;
-
+    private readonly List<GL33DrawCommandQueue> freeCommandQueues;
 }

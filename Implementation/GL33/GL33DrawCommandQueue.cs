@@ -5,11 +5,9 @@ using VRenderLib.Interface;
 
 namespace VRenderLib.Implementation.GL33;
 
-
 class GL33DrawCommandQueue : IDrawCommandQueue
 {
-    List<Action> drawCommands;
-
+    readonly List<Action> drawCommands;
 
     public GL33DrawCommandQueue()
     {
@@ -22,7 +20,7 @@ class GL33DrawCommandQueue : IDrawCommandQueue
         bool depthTest
     )
     {
-        drawCommands.Add(() => {DrawRaw((GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest);});
+        drawCommands.Add(() => DrawRaw((GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest));
     }
 
     public void DrawDirect(IRenderTexture texture, IRenderMesh mesh, IRenderShader shader,
@@ -32,7 +30,7 @@ class GL33DrawCommandQueue : IDrawCommandQueue
         DrawRaw((GL33Texture)texture, (GL33Mesh)mesh, (GL33Shader)shader, uniforms, depthTest);
     }
 
-    private void DrawRaw(
+    private static void DrawRaw(
         GL33Texture texture, GL33Mesh mesh, GL33Shader shader,
         IEnumerable<KeyValuePair<string, object>> uniforms,
         bool depthTest

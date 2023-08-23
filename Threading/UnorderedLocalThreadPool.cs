@@ -23,9 +23,9 @@ using System.Collections.Concurrent;
 
 public sealed class UnorderedLocalThreadPool
 {
-    AutoResetEvent poolThreadWaits;
-    ConcurrentStack<ExecutorTask> tasks;
-    Thread[] threads;
+    readonly AutoResetEvent poolThreadWaits;
+    readonly ConcurrentStack<ExecutorTask> tasks;
+    readonly Thread[] threads;
     bool running;
 
     public UnorderedLocalThreadPool(int numThreads)
@@ -36,8 +36,10 @@ public sealed class UnorderedLocalThreadPool
         running = true;
         for(int i=0; i<threads.Length; i++)
         {
-            Thread poolThread = new Thread(PoolThreadMain);
-            poolThread.Name = "UnorderedLocalPoolThread" + i;
+            Thread poolThread = new(PoolThreadMain)
+            {
+                Name = "UnorderedLocalPoolThread" + i
+            };
             threads[i] = poolThread;
             poolThread.Start();
         }
@@ -57,13 +59,12 @@ public sealed class UnorderedLocalThreadPool
             {
                 poolThreadWaits.WaitOne(100);
             }
-            
         }
     }
 
     public ExecutorTask SubmitTask(Action? func, string name)
     {
-        ExecutorTask task = new ExecutorTask(func, name);
+        ExecutorTask task = new(func, name);
         tasks.Push(task);
         poolThreadWaits.Set();
         return task;
@@ -71,7 +72,7 @@ public sealed class UnorderedLocalThreadPool
 
     public ExecutorTask<TResult> SubmitTask<TResult>(Func<TResult>? func, string name)
     {
-        ExecutorTask<TResult> task = new ExecutorTask<TResult>(func, name);
+        ExecutorTask<TResult> task = new(func, name);
         tasks.Push(task);
         poolThreadWaits.Set();
         return task;

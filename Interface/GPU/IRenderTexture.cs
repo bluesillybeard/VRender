@@ -26,12 +26,4 @@ public interface IRenderTexture : IDisposable
     </summary>
     */
     void SetData(ImageResult image);
-
-        /**
-    <summary>
-        Gets the image data from the GPU and returns it.
-        Don't use this unless for extraordinary circumstances, as it is quite slow.
-    </summary>
-    */
-    ExecutorTask<ImageResult> GetDataAsync();
 }

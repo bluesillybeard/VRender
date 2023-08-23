@@ -36,9 +36,7 @@ class GL33Mesh : IRenderMesh
         if(Environment.CurrentManagedThreadId != 1)
         {
             //Needs to be on main thread
-            IRender.CurrentRender.SubmitToQueueLowPriority( () => {
-                Dispose();
-            }, "DisposeMesh");
+            IRender.CurrentRender.SubmitToQueueLowPriority(() => Dispose(), "DisposeMesh");
             return;
         }
         disposed = true;
@@ -64,7 +62,7 @@ class GL33Mesh : IRenderMesh
     private int vertexArrayObject;
     private uint indexCount;
     private uint vertexFloatCount;
-    private Attributes attributes;
+    private readonly Attributes attributes;
     public GL33Mesh(VMesh mesh, bool dynamic)
     {
         this.attributes = mesh.attributes;
@@ -111,7 +109,6 @@ class GL33Mesh : IRenderMesh
 
 //TODO: memory leak avoidance.
 struct GL33MeshHandle{
-
     public GL33MeshHandle(int indexBuffer, int vertexBufferObject, int vertexArrayObject){
         this.indexBuffer = indexBuffer;
         this.vertexBufferObject = vertexBufferObject;

@@ -4,7 +4,7 @@ using vmodel;
 
 using System.Collections.Generic;
 public static class MeshGenerators{
-    public static readonly Attributes defaultTextAttributes = new Attributes(new EAttribute[]{EAttribute.position, EAttribute.textureCoords});
+    public static readonly Attributes defaultTextAttributes = new(new EAttribute[]{EAttribute.position, EAttribute.textureCoords});
     public const int defaultTextPosAttrib = 0;
     public const int defaultTextTexAttrib = 1;
     private const int cacheLimit = 1000;
@@ -43,8 +43,8 @@ public static class MeshGenerators{
             return null;
         }
         //sort the text to a more readable form
-        List<List<char>> lines = new List<List<char>>();
-        List<char> line = new List<char>();
+        List<List<char>> lines = new();
+        List<char> line = new();
         int numCharacters = 0;
         //split into lines
         foreach(char character in text)
@@ -85,7 +85,6 @@ public static class MeshGenerators{
             error = "Not enough attributes";
             return null;
         }
-        int extraAttrib  = totalAttrib - 4;
         //We use the previously mentioned values to create a mapping
         int[] mapping = new int[totalAttrib];
         Array.Fill(mapping, -1);//initialize values to -1
@@ -94,7 +93,7 @@ public static class MeshGenerators{
         mapping[texAttribOffset  ] = 2;
         mapping[texAttribOffset+1] = 3;
 
-        MeshBuilder builder = new MeshBuilder(attributes, numCharacters*4*totalAttrib, numCharacters*6);
+        MeshBuilder builder = new(attributes, numCharacters*4*totalAttrib, numCharacters*6);
         float YStart = centerY ? -lines.Count/2f : 0; //the farthest up coordinate of the text.
         for(int i=0; i < lines.Count; i++)
         {
@@ -129,7 +128,7 @@ public static class MeshGenerators{
         // First, add the item to the cache and cache limit
         // We can reuse the hash from earlier
         stringMeshCache.Add(hash, mesh);
-        cacheLimiter.Append(hash);
+        cacheLimiter.Enqueue(hash);
         //Then we remove one if the cache is "full"
         if(cacheLimiter.Count > cacheLimit)
         {
@@ -140,8 +139,8 @@ public static class MeshGenerators{
         }
         return mesh;
     }
-    private static Dictionary<int, VMesh> stringMeshCache = new Dictionary<int, VMesh>();
+    private static readonly Dictionary<int, VMesh> stringMeshCache = new();
     // We need to keep the cache from constantly increasing memory usage
     // TODO: cache priority system
-    private static Queue<int> cacheLimiter = new Queue<int>();
+    private static readonly Queue<int> cacheLimiter = new();
 }

@@ -39,7 +39,7 @@ public class ExecutorTask
         //We've verified that it's not running or already done, so we can just run it.
         running = true;
         try{
-            if(task is not null) task.Invoke();
+            task?.Invoke();
         } catch (Exception e)
         {
             exception = e;
@@ -82,7 +82,6 @@ public class ExecutorTask
 
 public sealed class ExecutorTask<TResult> : ExecutorTask
 {
-
     public ExecutorTask(Func<TResult>? resultTask, string name)
     : base(null, name) //C# drives me nuts sometimes, there has to be a better way to do this
     {
@@ -90,7 +89,7 @@ public sealed class ExecutorTask<TResult> : ExecutorTask
             base.task = null;
             return;
         }
-        base.task = () => {RunTask(resultTask, out result);};
+        base.task = () => RunTask(resultTask, out result);
     }
 
     public ExecutorTask(Func<TResult>? resultTask, bool completed, string name)
@@ -100,7 +99,7 @@ public sealed class ExecutorTask<TResult> : ExecutorTask
             base.task = null;
             return;
         }
-        base.task = () => {RunTask(resultTask, out result);};
+        base.task = () => RunTask(resultTask, out result);
     }
     /**
     <summary>

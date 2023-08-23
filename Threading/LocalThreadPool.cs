@@ -23,9 +23,9 @@ using System.Collections.Concurrent;
 
 public sealed class LocalThreadPool
 {
-    AutoResetEvent poolThreadWaits;
-    ConcurrentQueue<ExecutorTask> tasks;
-    Thread[] threads;
+    readonly AutoResetEvent poolThreadWaits;
+    readonly ConcurrentQueue<ExecutorTask> tasks;
+    readonly Thread[] threads;
     bool running;
     bool paused;
     uint tasksRunning = 0;
@@ -39,8 +39,10 @@ public sealed class LocalThreadPool
         paused = false;
         for(int i=0; i<threads.Length; i++)
         {
-            Thread poolThread = new Thread(PoolThreadMain);
-            poolThread.Name = "LocalPoolThread" + i;
+            Thread poolThread = new(PoolThreadMain)
+            {
+                Name = "LocalPoolThread" + i
+            };
             threads[i] = poolThread;
             poolThread.Start();
         }
@@ -67,7 +69,6 @@ public sealed class LocalThreadPool
             {
                 poolThreadWaits.WaitOne(100);
             }
-            
         }
     }
 
@@ -89,7 +90,7 @@ public sealed class LocalThreadPool
 
     public ExecutorTask SubmitTask(Action? func, string name)
     {
-        ExecutorTask task = new ExecutorTask(func, name);
+        ExecutorTask task = new(func, name);
         tasks.Enqueue(task);
         poolThreadWaits.Set();
         return task;
@@ -97,7 +98,7 @@ public sealed class LocalThreadPool
 
     public ExecutorTask<TResult> SubmitTask<TResult>(Func<TResult>? func, string name)
     {
-        ExecutorTask<TResult> task = new ExecutorTask<TResult>(func, name);
+        ExecutorTask<TResult> task = new(func, name);
         tasks.Enqueue(task);
         poolThreadWaits.Set();
         return task;

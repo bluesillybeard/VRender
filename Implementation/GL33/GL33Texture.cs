@@ -9,7 +9,7 @@ using StbImageSharp;
 
 namespace VRenderLib.Implementation.GL33;
 
-public class GL33Texture : IRenderTexture
+public sealed class GL33Texture : IRenderTexture
 {
     /**
     <summary>
@@ -67,15 +67,13 @@ public class GL33Texture : IRenderTexture
         Relies on the ExecutorTaskGL context.
     </summary>
     */
-    private void SetParametersAndGenerateMipmaps()
+    private static void SetParametersAndGenerateMipmaps()
     {
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
 
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Clamp);
-        
-        //TODO: CPU mipmap generation so textures that are on an atlas don't get screwed at the edges.
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
     }
     private bool disposed;
@@ -84,10 +82,7 @@ public class GL33Texture : IRenderTexture
     {
         if(Environment.CurrentManagedThreadId != 1)
         {
-            IRender.CurrentRender.SubmitToQueueLowPriority( () => 
-            {
-                Dispose();
-            }, "DisposeTexture");
+            IRender.CurrentRender.SubmitToQueueLowPriority(() => Dispose(), "DisposeTexture");
             // The caller isn't waiting for a result, so we just move on.
             return;
         }
@@ -105,9 +100,7 @@ public class GL33Texture : IRenderTexture
         if(Environment.CurrentManagedThreadId != 1)
         {
             //We need to do it on the main thread so we have the OpenGL context.
-            var task = IRender.CurrentRender.SubmitToQueue( () => {
-                SetData(img);
-            }, "TextureSetData");
+            var task = IRender.CurrentRender.SubmitToQueue(() => SetData(img), "TextureSetData");
             return;
         }
         //GL.ActiveTexture(TextureUnit.Texture0);
@@ -124,13 +117,7 @@ public class GL33Texture : IRenderTexture
         return;
     }
 
-
     public ImageResult GetData()
-    {
-        throw new NotImplementedException();
-    }
-
-    public ExecutorTask<ImageResult> GetDataAsync()
     {
         throw new NotImplementedException();
     }
