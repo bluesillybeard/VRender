@@ -397,27 +397,32 @@ public sealed class GL33Render : IRender
     {
         Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
         mainThreadRunning = true;
-        while(mainThreadRunning)
+        try{
+            while(mainThreadRunning)
+            {
+                if(priorityTasks.TryDequeue(out var task))
+                {
+                    task.Execute();
+                }
+                else if(!priorityTasksOnly && normalTasks.TryDequeue(out task))
+                {
+                    task.Execute();
+                }
+                else if(!priorityTasksOnly && lowTasks.TryDequeue(out task))
+                {
+                    task.Execute();
+                }
+                else
+                {
+                    //There was no task. ):
+                    gameThreadWaits.Set();
+                    mainThreadWaits.WaitOne(1000);
+                }
+                //System.Console.WriteLine("hello");
+            }
+        } catch (Exception e)
         {
-            if(priorityTasks.TryDequeue(out var task))
-            {
-                task.Execute();
-            }
-            else if(!priorityTasksOnly && normalTasks.TryDequeue(out task))
-            {
-                task.Execute();
-            }
-            else if(!priorityTasksOnly && lowTasks.TryDequeue(out task))
-            {
-                task.Execute();
-            }
-            else
-            {
-                //There was no task. ):
-                gameThreadWaits.Set();
-                mainThreadWaits.WaitOne(1000);
-            }
-            //System.Console.WriteLine("hello");
+            System.Console.Error.WriteLine("Exception:" + e.Message + "\n" + e.StackTrace);
         }
     }
 
