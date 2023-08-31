@@ -31,7 +31,7 @@ public class Camera
     }
     public void SetAspect(Vector2i size)
     {
-        _aspect = ((float)size.X)/((float)size.Y);
+        _aspect = size.X / ((float)size.Y);
         _modified = true;
     }
     public float Aspect{get => _aspect; set{_aspect = value; _modified = true;}}

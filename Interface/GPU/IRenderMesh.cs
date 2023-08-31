@@ -6,7 +6,7 @@ public interface IRenderMesh : IDisposable
 {
     /**
     <summary>
-        Returns a span containing the attributes for this texture.
+        Returns the attributes for this mesh.
     </summary>
     */
     Attributes GetAttributes();
