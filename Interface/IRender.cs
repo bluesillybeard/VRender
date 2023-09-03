@@ -68,6 +68,7 @@ public interface IRender : IDisposable
     ///<summary>set the dynamic flag to true if it will be frequently modified.</summary>
     ExecutorTask<(IRenderMesh?, Exception? error)> LoadMeshAsync(string vmeshPath, bool dynamic);
 
+    //TODO: determine Attributes from the shader code instead instead of taking it as a parameter
     /**
     <summary>
         Returns a compiled shader from the given GLSL code.
